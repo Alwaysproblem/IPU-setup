@@ -2,7 +2,7 @@
 
 This is a bash shell script for poplar sdk installation from [Graphcore support](https://www.graphcore.ai/support)
 
-**Note: This is not official bash installation script**
+**Note: This is not official bash installation script and only tested on Ubuntu 18.04**
 
 ## Usage
 
