@@ -1,0 +1,158 @@
+#!/bin/bash
+
+function _create_conda_activate_script(){
+  local file_path=$1
+  cat <<EOF > "${file_path}"
+#!/bin/bash
+# set -ex
+
+export GCDA_MONITOR=1
+export TF_CPP_VMODULE="poplar_compiler=1,poplar_executable=1"
+export TF_POPLAR_FLAGS="--max_compilation_threads=40 --executable_cache_path=/root/.cache --show_progress_bar=true"
+export TMPDIR="/tmp"
+export IPUOF_CONFIG_PATH="/tmps/problem-solution/graphcore/pod16_ipuof.conf"
+
+export _OLD_TMPDIR=\$TMPDIR
+export _OLD_CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH
+export _OLD_PATH=\${PATH#\$CONDA_PREFIX/bin:}
+export _OLD_CPATH=\$CPATH
+export _OLD_LIBRARY_PATH=\$LIBRARY_PATH
+export _OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH
+export _OLD_OMPI_CPPFLAGS=\$OMPI_CPPFLAGS
+export _OLD_OPAL_PREFIX=\$OPAL_PREFIX
+export _OLD_PYTHONPATH=\$PYTHONPATH
+
+
+function check_file_exist()
+{
+  _file=\$1
+  if [ ! -d \$_file ];then
+    printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
+  fi	
+}
+
+check_file_exist "/root/sdk/2.0.0+108156-165bbd8a64/enable.sh"
+pushd /root/sdk/2.0.0+108156-165bbd8a64
+  source "/root/sdk/2.0.0+108156-165bbd8a64/enable.sh"
+popd
+
+check_file_exist "/root/sdk/2.0.0+108156-165bbd8a64/enable.sh"
+pushd /root/sdk/2.0.0+108156-165bbd8a64
+  source "/root/sdk/2.0.0+108156-165bbd8a64/enable.sh"
+popd
+
+# set +ex
+EOF
+}
+
+function _create_conda_deactivate_script(){
+  local file_path=$1
+  cat <<EOF > "${file_path}"
+#!/bin/bash
+# set -ex
+
+export TMPDIR=\$_OLD_TMPDIR
+export CMAKE_PREFIX_PATH=\$_OLD_CMAKE_PREFIX_PATH
+export PATH=\$_OLD_PATH
+export CPATH=\$_OLD_CPATH
+export LIBRARY_PATH=\$_OLD_LIBRARY_PATH
+export LD_LIBRARY_PATH=\$_OLD_LD_LIBRARY_PATH
+export OMPI_CPPFLAGS=\$_OLD_OMPI_CPPFLAGS
+export OPAL_PREFIX=\$_OLD_OPAL_PREFIX
+export PYTHONPATH=\$_OLD_PYTHONPATH
+
+unset GCDA_MONITOR
+unset TF_CPP_VMODULE
+unset TF_POPLAR_FLAGS
+unset IPUOF_CONFIG_PATH
+unset POPLAR_SDK_ENABLED
+unset _OLD_TMPDIR
+unset _OLD_CMAKE_PREFIX_PATH
+unset _OLD_PATH
+unset _OLD_CPATH
+unset _OLD_LIBRARY_PATH
+unset _OLD_LD_LIBRARY_PATH
+unset _OLD_OMPI_CPPFLAGS
+unset _OLD_OPAL_PREFIX
+unset _OLD_PYTHONPATH
+
+# set +ex
+EOF
+}
+
+function conda_wrapper_help_msg(){
+  echo ""
+  echo "IPU environment initialization wrapper for conda environment creation."
+  echo ""
+  echo "The generated bash script can write environment variables to "
+  echo "\`\$CONDA_PREFIX/etc/conda/activate.d\` or \`\$CONDA_PREFIX/etc/conda/deactivate.d\`"
+  echo "instead of \`source enable.sh\` manually after you create conda environment"
+  echo "with this wrapper. You alse can edit those configuration manually if your ipu configuration is changed"
+  echo "the path is \`\$CONDA_PREFIX/etc/conda/activate.d/ipu_set_env.sh\` or"
+  echo "\`\$CONDA_PREFIX/etc/conda/deactivate.d/ipu_unset_env.sh\`"
+  echo ""
+  echo "usage:"
+  echo "    IPUconda [conda create enviornment command]"
+  echo "    for example:"
+  echo "        \$ IPUconda conda create -n my-ipu-env python=3.6"
+  echo ""
+  echo "    -h, --help: print helpful message"
+  echo ""
+}
+
+
+function extract_condaenv_name(){
+    local conda_str=$1
+    local _prefix=""
+    local _env_name=""
+    while [ "$1" != "" ]; do
+        case $1 in
+            -p | --prefix)          shift
+                                    _prefix=$1
+                                    ;;
+            -n | --name )           shift
+                                    _env_name=$1
+                                    ;;
+        esac
+        shift
+    done
+    if [[ ${_prefix} != "" && $_env_name != "" ]]; then
+        if [[ ${_prefix} == /* ]]; then
+            _prefix=${_prefix}
+        else
+            _prefix="${PWD}/${_prefix}"
+        fi
+        _CONDA_ENV_NAME="${_prefix}/${_env_name}"
+    else
+        _CONDA_ENV_NAME="${_prefix}${_env_name}"
+    fi
+    echo ${_CONDA_ENV_NAME}
+}
+
+if [[ $1 != "conda" ]]; then
+    conda_wrapper_help_msg
+    exit 0
+fi
+
+_CONDA_CMD=$@
+echo "${_CONDA_CMD}"
+extract_condaenv_name ${_CONDA_CMD}
+bash -ic "${_CONDA_CMD}"
+
+_CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $(which conda)))/envs"
+if [[ ${_CONDA_ENV_NAME} != /* ]]; then
+    mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/"
+    mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/"
+    _create_conda_activate_script "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh"
+    _create_conda_deactivate_script "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh"
+else
+    mkdir -p "${_CONDA_ENV_NAME}/etc/conda/activate.d/"
+    mkdir -p "${_CONDA_ENV_NAME}/etc/conda/deactivate.d/"
+    _create_conda_activate_script "${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh"
+    _create_conda_deactivate_script "${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh"
+fi
+
+if [[ $? != 0 ]]; then
+    conda_wrapper_help_msg
+    exit 0
+fi
