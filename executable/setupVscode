@@ -1,0 +1,149 @@
+#!/bin/bash
+
+export POP_DIR_BASE="/mnt/scratch001/custeng-cn-scratch/yongxiy"
+
+function vscode_files_help_msg(){
+  echo ""
+  echo "Initialize vscode settings under workspace/.vscode only for Linux"
+  echo ""
+  echo "1. settings.json (the settings for vscode project)"
+  echo "2. .ipu.env (define the variables for debug and run through trangles button)"
+  echo "3. terminal.env.sh (automatically source ipu env when initiate integrate terminal if you are not using conda)"
+  echo ""
+  echo "usage:"
+  echo "  -p, --project   the path to your workspace"
+  echo "  -h, --help      print this help message"
+  echo ""
+}
+
+function gen_envfile(){
+  local workspace=$1
+  local file_name=".ipu.env"
+
+  echo -ne "" > "${workspace}/.vscode/${file_name}"
+
+  echo "GCDA_MONITOR=1" >> "${workspace}/.vscode/${file_name}"
+  echo "TF_CPP_VMODULE='poplar_compiler=1,poplar_executable=1'" >> "${workspace}/.vscode/${file_name}"
+  echo "TF_POPLAR_FLAGS='--max_compilation_threads=40 --executable_cache_path=/mnt/scratch001/custeng-cn-scratch/yongxiy/cachedir --show_progress_bar=true'" >> "${workspace}/.vscode/${file_name}"
+  echo "TMPDIR=/mnt/scratch001/custeng-cn-scratch/yongxiy/tmp" >> "${workspace}/.vscode/${file_name}"
+  echo "IPUOF_CONFIG_PATH=/localdata/yongxiy/env/ipu-config/pod64/$HOST/ipuof.conf" >> "${workspace}/.vscode/${file_name}"
+  echo "CMAKE_PREFIX_PATH=/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64:/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64" >> "${workspace}/.vscode/${file_name}"
+  echo "PATH=/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/bin:/mnt/scratch001/custeng-cn-scratch/yongxiy/env/anaconda3/condabin:/home/scotty/.vscode-server/bin/08a217c4d27a02a5bcde898fd7981bda5b49391b/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/home/scotty/arcanist/bin:/home/scotty/.ipuenv" >> "${workspace}/.vscode/${file_name}"
+  echo "CPATH=/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/include:/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64/include" >> "${workspace}/.vscode/${file_name}"
+  echo "LIBRARY_PATH=/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/lib:/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64/lib" >> "${workspace}/.vscode/${file_name}"
+  echo "LD_LIBRARY_PATH=/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/lib:/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64/lib" >> "${workspace}/.vscode/${file_name}"
+  echo "OMPI_CPPFLAGS=-I/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/include/openmpi" >> "${workspace}/.vscode/${file_name}"
+  echo "OPAL_PREFIX=/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64" >> "${workspace}/.vscode/${file_name}"
+  echo "PYTHONPATH=/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/python:/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/lib/python:/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64/python:" >> "${workspace}/.vscode/${file_name}"
+  echo "POPLAR_SDK_ENABLED=/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64" >> "${workspace}/.vscode/${file_name}"
+}
+
+function gen_terminial_init_script(){
+  local workspace=$1
+  local file_name="terminal.env.sh"
+  cat <<EOF > "${workspace}/.vscode/${file_name}"
+#!/bin/bash
+# set -ex
+
+export GCDA_MONITOR=1
+export TF_CPP_VMODULE="poplar_compiler=1,poplar_executable=1"
+export TF_POPLAR_FLAGS="--max_compilation_threads=40 --executable_cache_path=/mnt/scratch001/custeng-cn-scratch/yongxiy/cachedir --show_progress_bar=true"
+export TMPDIR="/mnt/scratch001/custeng-cn-scratch/yongxiy/tmp"
+export IPUOF_CONFIG_PATH="/localdata/yongxiy/env/ipu-config/pod64/gbnwx-pod004-1.ipu.graphcore.ai/ipuof.conf"
+
+function check_file_exist()
+{
+  _file=\$1
+  if [ ! -f \$_file ];then
+    printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
+  fi	
+}
+
+check_file_exist "/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64/enable.sh"
+pushd /mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64
+  source "/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64/enable.sh"
+popd
+
+check_file_exist "/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/enable.sh"
+pushd /mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64
+  source "/mnt/scratch001/custeng-cn-scratch/yongxiy/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/enable.sh"
+popd
+
+# set +ex
+EOF
+}
+
+function _modify_setting_json(){
+  local file=$1
+  local total_line=$(wc -l ${file} | awk -F' ' '{print $1}')
+  local last_line=$((total_line - 1))
+
+  local a=0
+  cat ${file} | while read LINE
+  do
+    echo $LINE
+  done
+
+}
+
+function _add_to_setting_json(){
+  local workspace=$1
+  if [[ ! -f "$workspace/.vscode/settings.json" ]]; then
+    cat <<EOF > "$workspace/.vscode/settings.json"
+{
+    "python.envFile": "\${workspaceFolder}/.vscode/.ipu.env",
+    // this is for running bash script before initiating internal terminal
+    "terminal.integrated.shellArgs.linux": ["-c", "source .vscode/terminal.env.sh; zsh"],
+}
+EOF
+  else
+    sed -i '1a "terminal.integrated.shellArgs.linux": ["-c", "source .vscode/terminal.env.sh; zsh"],",' "$workspace/.vscode/settings.json"
+    sed -i '1a // this is for running bash script before initiating internal terminal",' "$workspace/.vscode/settings.json"
+    sed -i '1a "python.envFile": "${workspaceFolder}/.vscode/.ipu.env",' "$workspace/.vscode/settings.json"
+  fi
+}
+
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -p | --project)          shift
+                                _project=$1
+                                ;;
+        -h | --help )           vscode_files_help_msg
+                                exit 0
+                                ;;
+        *)                      vscode_files_help_msg
+                                exit 0
+                                ;;
+    esac
+    shift
+done
+
+if [[ ${_project} != "" ]]; then
+  if [[ ${_project} == /* ]]; then
+    _project=${_project}
+  else
+    _project="${PWD}/${_project}"
+  fi
+else
+  _project="${PWD}"
+fi
+
+if [[ -d "${_project}" ]]; then
+  if [[ ! -d "${_project}/.vscode" ]];then
+    mkdir -p "${_project}/.vscode"
+  fi
+else
+  printf "\e[93m%s does not exsists.\n\e[0m" ${_project}
+  exit 0
+fi
+
+
+
+# set -ex 
+
+gen_envfile ${_project}
+gen_terminial_init_script ${_project}
+_add_to_setting_json ${_project}
+
+# set +ex

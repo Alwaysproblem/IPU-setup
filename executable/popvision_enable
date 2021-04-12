@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export POPLAR_ENGINE_OPTIONS='{"autoReport.all":"true", "autoReport.directory":"./popvision"}'
+bash -ic $@
+unset POPLAR_ENGINE_OPTIONS
