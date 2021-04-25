@@ -1,5 +1,17 @@
 #!/bin/bash
 
-export POPLAR_ENGINE_OPTIONS='{"autoReport.all":"true", "autoReport.directory":"./popvision"}'
+if [[ -z "${POPV_LOG_PATH}" ]]; then
+    echo "POPV_LOG_PATH should not be empty." 1>&2
+    exit 127
+else
+    if [[ -d "${POPV_LOG_PATH}" ]]; then
+        echo "warning: removing ${POPV_LOG_PATH}"
+        rm -rf ${POPV_LOG_PATH}
+        echo "done"
+    fi
+fi
+
+export POPLAR_ENGINE_OPTIONS='{"autoReport.all":"true", "autoReport.directory":"'"${POPV_LOG_PATH}"'"}'
 bash -ic $@
 unset POPLAR_ENGINE_OPTIONS
+
