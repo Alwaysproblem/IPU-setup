@@ -33,5 +33,5 @@ case $1 in
 esac
 
 export POPLAR_ENGINE_OPTIONS='{"autoReport.all":"true", "autoReport.directory":"'"${POPV_LOG_PATH}"'"}'
-bash -ic $@
+eval $@
 unset POPLAR_ENGINE_OPTIONS
