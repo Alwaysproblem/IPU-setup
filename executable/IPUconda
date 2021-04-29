@@ -64,6 +64,7 @@ export _OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH
 export _OLD_OMPI_CPPFLAGS=\$OMPI_CPPFLAGS
 export _OLD_OPAL_PREFIX=\$OPAL_PREFIX
 export _OLD_PYTHONPATH=\$PYTHONPATH
+
 function check_file_exist()
 {
   _file=\$1
@@ -71,14 +72,16 @@ function check_file_exist()
     printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
   fi	
 }
-check_file_exist "$POP_DIR/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64/enable.sh"
-pushd $POP_DIR/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64
-  source "$POP_DIR/popart-ubuntu_18_04-2.0.0+108156-165bbd8a64/enable.sh"
+
+check_file_exist "$POPART_BASE/enable.sh"
+pushd $POPART_BASE
+  source "$POPART_BASE/enable.sh"
 popd
-check_file_exist "$POP_DIR/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/enable.sh"
-pushd $POP_DIR/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64
-  source "$POP_DIR/poplar-ubuntu_18_04-2.0.0+108156-165bbd8a64/enable.sh"
+check_file_exist "$POPLAR_BASE/enable.sh"
+pushd $POPLAR_BASE
+  source "$POPLAR_BASE/enable.sh"
 popd
+
 # set +ex
 EOF
 }
