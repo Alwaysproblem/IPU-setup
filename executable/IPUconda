@@ -596,13 +596,13 @@ _CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $(which conda)))/envs"
 if [[ ${_CONDA_ENV_NAME} != /* ]]; then
     mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/"
     mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/"
-    _create_conda_activate_script_tf "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh" ${_ML_FRAMEWORK}
-    _create_conda_deactivate_script_tf "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh" ${_ML_FRAMEWORK}
+    _create_conda_activate_script "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh" ${_ML_FRAMEWORK}
+    _create_conda_deactivate_script "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh" ${_ML_FRAMEWORK}
 else
     mkdir -p "${_CONDA_ENV_NAME}/etc/conda/activate.d/"
     mkdir -p "${_CONDA_ENV_NAME}/etc/conda/deactivate.d/"
-    _create_conda_activate_script_tf "${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh" ${_ML_FRAMEWORK}
-    _create_conda_deactivate_script_tf "${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh" ${_ML_FRAMEWORK}
+    _create_conda_activate_script "${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh" ${_ML_FRAMEWORK}
+    _create_conda_deactivate_script "${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh" ${_ML_FRAMEWORK}
 fi
 
 if [[ $? != 0 ]]; then
