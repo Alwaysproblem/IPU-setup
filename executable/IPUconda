@@ -1,12 +1,20 @@
 #!/bin/bash
 
-EXECUTABLE_CACHE_PATH="${HOME}/.cache"
+# EXECUTABLE_CACHE_PATH="${HOME}/.cache"
+EXECUTABLE_CACHE_PATH="/mnt/scratch001/custeng-cn-scratch/yongxiy/cachedir"
 
 if [[ -z ${TMPDIR} ]]; then
   TMPDIR="/tmp"
 fi
 
-IPUOF_CONFIG_PATH="${POP_BASE_DIR}/sdk/pod16_ipuof.conf"
+TMPDIR="/mnt/scratch001/custeng-cn-scratch/yongxiy/tmp"
+
+# IPUOF_CONFIG_PATH="${POP_BASE_DIR}/sdk/pod16_ipuof.conf"
+IPUOF_CONFIG_PATH="/localdata/yongxiy/.ipuof.conf.d/ipuof.conf"
+
+function warning_msg(){
+  printf "\e[93m%s\e[0m" $1
+}
 
 function _input() {
   echo "${1}"
@@ -45,7 +53,7 @@ function _input_config_env(){
   check_file_exist ${IPUOF_CONFIG_PATH}
 }
 
-function _create_conda_activate_script(){
+function _create_conda_activate_script_tf(){
   local file_path=$1
   cat <<EOF > "${file_path}"
 #!/bin/bash
@@ -86,7 +94,7 @@ popd
 EOF
 }
 
-function _create_conda_deactivate_script(){
+function _create_conda_deactivate_script_tf(){
   local file_path=$1
   cat <<EOF > "${file_path}"
 #!/bin/bash
@@ -114,10 +122,351 @@ unset _OLD_LD_LIBRARY_PATH
 unset _OLD_OMPI_CPPFLAGS
 unset _OLD_OPAL_PREFIX
 unset _OLD_PYTHONPATH
+# set +ex
+EOF
+}
+
+function _create_conda_activate_script_torch(){
+  local file_path=$1
+  cat <<EOF > "${file_path}"
+#!/bin/bash
+# set -ex
+export GCDA_MONITOR=1
+export TF_CPP_VMODULE="poplar_compiler=1,poplar_executable=1"
+export TF_POPLAR_FLAGS="--max_compilation_threads=40 --executable_cache_path=${EXECUTABLE_CACHE_PATH} --show_progress_bar=true"
+export POPTORCH_CACHE_DIR="${EXECUTABLE_CACHE_PATH}"
+export TMPDIR="$TMPDIR"
+export IPUOF_CONFIG_PATH="$IPUOF_CONFIG_PATH"
+export _OLD_TMPDIR=\$TMPDIR
+export _OLD_CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH
+export _OLD_PATH=\${PATH#\$CONDA_PREFIX/bin:}
+export _OLD_CPATH=\$CPATH
+export _OLD_LIBRARY_PATH=\$LIBRARY_PATH
+export _OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH
+export _OLD_OMPI_CPPFLAGS=\$OMPI_CPPFLAGS
+export _OLD_OPAL_PREFIX=\$OPAL_PREFIX
+export _OLD_PYTHONPATH=\$PYTHONPATH
+
+function check_file_exist()
+{
+  _file=\$1
+  if [ ! -f \$_file ];then
+    printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
+  fi	
+}
+
+check_file_exist "$POPART_BASE/enable.sh"
+pushd $POPART_BASE
+  source "$POPART_BASE/enable.sh"
+popd
+check_file_exist "$POPLAR_BASE/enable.sh"
+pushd $POPLAR_BASE
+  source "$POPLAR_BASE/enable.sh"
+popd
 
 # set +ex
 EOF
 }
+
+function _create_conda_deactivate_script_torch(){
+  local file_path=$1
+  cat <<EOF > "${file_path}"
+#!/bin/bash
+# set -ex
+export TMPDIR=\$_OLD_TMPDIR
+export CMAKE_PREFIX_PATH=\$_OLD_CMAKE_PREFIX_PATH
+export PATH=\$_OLD_PATH
+export CPATH=\$_OLD_CPATH
+export LIBRARY_PATH=\$_OLD_LIBRARY_PATH
+export LD_LIBRARY_PATH=\$_OLD_LD_LIBRARY_PATH
+export OMPI_CPPFLAGS=\$_OLD_OMPI_CPPFLAGS
+export OPAL_PREFIX=\$_OLD_OPAL_PREFIX
+export PYTHONPATH=\$_OLD_PYTHONPATH
+unset GCDA_MONITOR
+unset TF_CPP_VMODULE
+unset TF_POPLAR_FLAGS
+unset IPUOF_CONFIG_PATH
+unset POPLAR_SDK_ENABLED
+unset _OLD_TMPDIR
+unset _OLD_CMAKE_PREFIX_PATH
+unset _OLD_PATH
+unset _OLD_CPATH
+unset _OLD_LIBRARY_PATH
+unset _OLD_LD_LIBRARY_PATH
+unset _OLD_OMPI_CPPFLAGS
+unset _OLD_OPAL_PREFIX
+unset _OLD_PYTHONPATH
+unset POPTORCH_CACHE_DIR
+# set +ex
+EOF
+}
+
+function _create_conda_activate_script_jax(){
+  warning_msg "This ML Framework is not supported for now."
+#   local file_path=$1
+#   cat <<EOF > "${file_path}"
+# #!/bin/bash
+# # set -ex
+# export GCDA_MONITOR=1
+# export TF_CPP_VMODULE="poplar_compiler=1,poplar_executable=1"
+# export TF_POPLAR_FLAGS="--max_compilation_threads=40 --executable_cache_path=${EXECUTABLE_CACHE_PATH} --show_progress_bar=true"
+# export TMPDIR="$TMPDIR"
+# export IPUOF_CONFIG_PATH="$IPUOF_CONFIG_PATH"
+# export _OLD_TMPDIR=\$TMPDIR
+# export _OLD_CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH
+# export _OLD_PATH=\${PATH#\$CONDA_PREFIX/bin:}
+# export _OLD_CPATH=\$CPATH
+# export _OLD_LIBRARY_PATH=\$LIBRARY_PATH
+# export _OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH
+# export _OLD_OMPI_CPPFLAGS=\$OMPI_CPPFLAGS
+# export _OLD_OPAL_PREFIX=\$OPAL_PREFIX
+# export _OLD_PYTHONPATH=\$PYTHONPATH
+
+# function check_file_exist()
+# {
+#   _file=\$1
+#   if [ ! -f \$_file ];then
+#     printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
+#   fi	
+# }
+
+# check_file_exist "$POPART_BASE/enable.sh"
+# pushd $POPART_BASE
+#   source "$POPART_BASE/enable.sh"
+# popd
+# check_file_exist "$POPLAR_BASE/enable.sh"
+# pushd $POPLAR_BASE
+#   source "$POPLAR_BASE/enable.sh"
+# popd
+
+# # set +ex
+# EOF
+}
+
+function _create_conda_deactivate_script_jax(){
+  warning_msg "This ML Framework is not supported for now."
+#   local file_path=$1
+#   cat <<EOF > "${file_path}"
+# #!/bin/bash
+# # set -ex
+# export TMPDIR=\$_OLD_TMPDIR
+# export CMAKE_PREFIX_PATH=\$_OLD_CMAKE_PREFIX_PATH
+# export PATH=\$_OLD_PATH
+# export CPATH=\$_OLD_CPATH
+# export LIBRARY_PATH=\$_OLD_LIBRARY_PATH
+# export LD_LIBRARY_PATH=\$_OLD_LD_LIBRARY_PATH
+# export OMPI_CPPFLAGS=\$_OLD_OMPI_CPPFLAGS
+# export OPAL_PREFIX=\$_OLD_OPAL_PREFIX
+# export PYTHONPATH=\$_OLD_PYTHONPATH
+# unset GCDA_MONITOR
+# unset TF_CPP_VMODULE
+# unset TF_POPLAR_FLAGS
+# unset IPUOF_CONFIG_PATH
+# unset POPLAR_SDK_ENABLED
+# unset _OLD_TMPDIR
+# unset _OLD_CMAKE_PREFIX_PATH
+# unset _OLD_PATH
+# unset _OLD_CPATH
+# unset _OLD_LIBRARY_PATH
+# unset _OLD_LD_LIBRARY_PATH
+# unset _OLD_OMPI_CPPFLAGS
+# unset _OLD_OPAL_PREFIX
+# unset _OLD_PYTHONPATH
+# # set +ex
+# EOF
+}
+
+function _create_conda_activate_script_tf2(){
+  local file_path=$1
+  cat <<EOF > "${file_path}"
+#!/bin/bash
+# set -ex
+export GCDA_MONITOR=1
+export TF_CPP_VMODULE="poplar_compiler=1,poplar_executable=1"
+export TF_POPLAR_FLAGS="--max_compilation_threads=40 --executable_cache_path=${EXECUTABLE_CACHE_PATH} --show_progress_bar=true"
+export TMPDIR="$TMPDIR"
+export IPUOF_CONFIG_PATH="$IPUOF_CONFIG_PATH"
+export _OLD_TMPDIR=\$TMPDIR
+export _OLD_CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH
+export _OLD_PATH=\${PATH#\$CONDA_PREFIX/bin:}
+export _OLD_CPATH=\$CPATH
+export _OLD_LIBRARY_PATH=\$LIBRARY_PATH
+export _OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH
+export _OLD_OMPI_CPPFLAGS=\$OMPI_CPPFLAGS
+export _OLD_OPAL_PREFIX=\$OPAL_PREFIX
+export _OLD_PYTHONPATH=\$PYTHONPATH
+
+function check_file_exist()
+{
+  _file=\$1
+  if [ ! -f \$_file ];then
+    printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
+  fi	
+}
+
+check_file_exist "$POPART_BASE/enable.sh"
+pushd $POPART_BASE
+  source "$POPART_BASE/enable.sh"
+popd
+check_file_exist "$POPLAR_BASE/enable.sh"
+pushd $POPLAR_BASE
+  source "$POPLAR_BASE/enable.sh"
+popd
+
+# set +ex
+EOF
+}
+
+function _create_conda_deactivate_script_tf2(){
+  local file_path=$1
+  cat <<EOF > "${file_path}"
+#!/bin/bash
+# set -ex
+export TMPDIR=\$_OLD_TMPDIR
+export CMAKE_PREFIX_PATH=\$_OLD_CMAKE_PREFIX_PATH
+export PATH=\$_OLD_PATH
+export CPATH=\$_OLD_CPATH
+export LIBRARY_PATH=\$_OLD_LIBRARY_PATH
+export LD_LIBRARY_PATH=\$_OLD_LD_LIBRARY_PATH
+export OMPI_CPPFLAGS=\$_OLD_OMPI_CPPFLAGS
+export OPAL_PREFIX=\$_OLD_OPAL_PREFIX
+export PYTHONPATH=\$_OLD_PYTHONPATH
+unset GCDA_MONITOR
+unset TF_CPP_VMODULE
+unset TF_POPLAR_FLAGS
+unset IPUOF_CONFIG_PATH
+unset POPLAR_SDK_ENABLED
+unset _OLD_TMPDIR
+unset _OLD_CMAKE_PREFIX_PATH
+unset _OLD_PATH
+unset _OLD_CPATH
+unset _OLD_LIBRARY_PATH
+unset _OLD_LD_LIBRARY_PATH
+unset _OLD_OMPI_CPPFLAGS
+unset _OLD_OPAL_PREFIX
+unset _OLD_PYTHONPATH
+# set +ex
+EOF
+}
+
+function _create_conda_activate_script_popart(){
+  warning_msg "This ML Framework is not supported for now."
+#   local file_path=$1
+#   echo 
+#   cat <<EOF > "${file_path}"
+# #!/bin/bash
+# # set -ex
+# export GCDA_MONITOR=1
+# export TF_CPP_VMODULE="poplar_compiler=1,poplar_executable=1"
+# export TF_POPLAR_FLAGS="--max_compilation_threads=40 --executable_cache_path=${EXECUTABLE_CACHE_PATH} --show_progress_bar=true"
+# export TMPDIR="$TMPDIR"
+# export IPUOF_CONFIG_PATH="$IPUOF_CONFIG_PATH"
+# export _OLD_TMPDIR=\$TMPDIR
+# export _OLD_CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH
+# export _OLD_PATH=\${PATH#\$CONDA_PREFIX/bin:}
+# export _OLD_CPATH=\$CPATH
+# export _OLD_LIBRARY_PATH=\$LIBRARY_PATH
+# export _OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH
+# export _OLD_OMPI_CPPFLAGS=\$OMPI_CPPFLAGS
+# export _OLD_OPAL_PREFIX=\$OPAL_PREFIX
+# export _OLD_PYTHONPATH=\$PYTHONPATH
+
+# function check_file_exist()
+# {
+#   _file=\$1
+#   if [ ! -f \$_file ];then
+#     printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
+#   fi	
+# }
+
+# check_file_exist "$POPART_BASE/enable.sh"
+# pushd $POPART_BASE
+#   source "$POPART_BASE/enable.sh"
+# popd
+# check_file_exist "$POPLAR_BASE/enable.sh"
+# pushd $POPLAR_BASE
+#   source "$POPLAR_BASE/enable.sh"
+# popd
+
+# # set +ex
+# EOF
+}
+
+function _create_conda_deactivate_script_popart(){
+  warning_msg "This ML Framework is not supported for now."
+#   local file_path=$1
+#   cat <<EOF > "${file_path}"
+# #!/bin/bash
+# # set -ex
+# export TMPDIR=\$_OLD_TMPDIR
+# export CMAKE_PREFIX_PATH=\$_OLD_CMAKE_PREFIX_PATH
+# export PATH=\$_OLD_PATH
+# export CPATH=\$_OLD_CPATH
+# export LIBRARY_PATH=\$_OLD_LIBRARY_PATH
+# export LD_LIBRARY_PATH=\$_OLD_LD_LIBRARY_PATH
+# export OMPI_CPPFLAGS=\$_OLD_OMPI_CPPFLAGS
+# export OPAL_PREFIX=\$_OLD_OPAL_PREFIX
+# export PYTHONPATH=\$_OLD_PYTHONPATH
+# unset GCDA_MONITOR
+# unset TF_CPP_VMODULE
+# unset TF_POPLAR_FLAGS
+# unset IPUOF_CONFIG_PATH
+# unset POPLAR_SDK_ENABLED
+# unset _OLD_TMPDIR
+# unset _OLD_CMAKE_PREFIX_PATH
+# unset _OLD_PATH
+# unset _OLD_CPATH
+# unset _OLD_LIBRARY_PATH
+# unset _OLD_LD_LIBRARY_PATH
+# unset _OLD_OMPI_CPPFLAGS
+# unset _OLD_OPAL_PREFIX
+# unset _OLD_PYTHONPATH
+# # set +ex
+# EOF
+}
+
+function _create_conda_activate_script(){
+  local file_path=$1
+  case $2 in
+      "Tensorflow 1.x")
+                              _create_conda_activate_script_tf $file_path
+                              ;;
+      "Tensorflow 2.x")
+                              _create_conda_activate_script_tf2 $file_path
+                              ;;
+      "Pytorch/Poptorch")
+                              _create_conda_activate_script_torch $file_path
+                              ;;
+      "PopArt")
+                              _create_conda_activate_script_popart $file_path
+                              ;;
+      "Jax")
+                              _create_conda_activate_script_jax $file_path
+                              ;;
+  esac
+}
+
+function _create_conda_deactivate_script(){
+  local file_path=$1
+  case $2 in
+      "Tensorflow 1.x")
+                              _create_conda_deactivate_script_tf $file_path
+                              ;;
+      "Tensorflow 2.x")
+                              _create_conda_deactivate_script_tf2 $file_path
+                              ;;
+      "Pytorch/Poptorch")
+                              _create_conda_deactivate_script_torch $file_path
+                              ;;
+      "PopArt")
+                              _create_conda_deactivate_script_popart $file_path
+                              ;;
+      "Jax")
+                              _create_conda_deactivate_script_jax $file_path
+                              ;;
+  esac
+}
+
 
 function conda_wrapper_help_msg(){
   echo ""
@@ -209,6 +558,25 @@ select opt in "${options[@]}" "Quit" ; do
 done
 cd -
 
+_ML_FRAMEWORK="Tensorflow"
+prompt="Please select a ML Framework:"
+options=( "Tensorflow 1.x" "Tensorflow 2.x" "Pytorch/Poptorch" "PopArt" "Jax" )
+PS3="$prompt "
+select opt in "${options[@]}" "Quit" ; do 
+    if (( REPLY == 1 + ${#options[@]} )) ; then
+        exit
+
+    elif (( REPLY > 0 && REPLY <= ${#options[@]} )) ; then
+        echo  "Chosen Framework: $opt"
+        _ML_FRAMEWORK="$opt"
+        break
+    else
+        echo "Invalid option. Try another one."
+    fi
+done
+
+
+
 POPART_BASE=$(find $POP_DIR -maxdepth 1 -name "popart-*")
 POPLAR_BASE=$(find $POP_DIR -maxdepth 1 -name "poplar-*")
 
@@ -228,13 +596,13 @@ _CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $(which conda)))/envs"
 if [[ ${_CONDA_ENV_NAME} != /* ]]; then
     mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/"
     mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/"
-    _create_conda_activate_script "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh"
-    _create_conda_deactivate_script "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh"
+    _create_conda_activate_script_tf "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh" ${_ML_FRAMEWORK}
+    _create_conda_deactivate_script_tf "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh" ${_ML_FRAMEWORK}
 else
     mkdir -p "${_CONDA_ENV_NAME}/etc/conda/activate.d/"
     mkdir -p "${_CONDA_ENV_NAME}/etc/conda/deactivate.d/"
-    _create_conda_activate_script "${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh"
-    _create_conda_deactivate_script "${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh"
+    _create_conda_activate_script_tf "${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh" ${_ML_FRAMEWORK}
+    _create_conda_deactivate_script_tf "${_CONDA_ENV_NAME}/etc/conda/deactivate.d/ipu_unset_env.sh" ${_ML_FRAMEWORK}
 fi
 
 if [[ $? != 0 ]]; then
