@@ -350,79 +350,75 @@ EOF
 }
 
 function _create_conda_activate_script_popart(){
-  warning_msg "This ML Framework is not supported for now."
-#   local file_path=$1
-#   echo 
-#   cat <<EOF > "${file_path}"
-# #!/bin/bash
-# # set -ex
-# export GCDA_MONITOR=1
-# export TF_CPP_VMODULE="poplar_compiler=1,poplar_executable=1"
-# export TF_POPLAR_FLAGS="--max_compilation_threads=40 --executable_cache_path=${EXECUTABLE_CACHE_PATH} --show_progress_bar=true"
-# export TMPDIR="$TMPDIR"
-# export IPUOF_CONFIG_PATH="$IPUOF_CONFIG_PATH"
-# export _OLD_TMPDIR=\$TMPDIR
-# export _OLD_CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH
-# export _OLD_PATH=\${PATH#\$CONDA_PREFIX/bin:}
-# export _OLD_CPATH=\$CPATH
-# export _OLD_LIBRARY_PATH=\$LIBRARY_PATH
-# export _OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH
-# export _OLD_OMPI_CPPFLAGS=\$OMPI_CPPFLAGS
-# export _OLD_OPAL_PREFIX=\$OPAL_PREFIX
-# export _OLD_PYTHONPATH=\$PYTHONPATH
+  # warning_msg "This ML Framework is not supported for now."
+  local file_path=$1
+  echo 
+  cat <<EOF > "${file_path}"
+#!/bin/bash
+# set -ex
+export GCDA_MONITOR=1
+export TMPDIR="$TMPDIR"
+export IPUOF_CONFIG_PATH="$IPUOF_CONFIG_PATH"
+export _OLD_TMPDIR=\$TMPDIR
+export _OLD_CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH
+export _OLD_PATH=\${PATH#\$CONDA_PREFIX/bin:}
+export _OLD_CPATH=\$CPATH
+export _OLD_LIBRARY_PATH=\$LIBRARY_PATH
+export _OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH
+export _OLD_OMPI_CPPFLAGS=\$OMPI_CPPFLAGS
+export _OLD_OPAL_PREFIX=\$OPAL_PREFIX
+export _OLD_PYTHONPATH=\$PYTHONPATH
 
-# function check_file_exist()
-# {
-#   _file=\$1
-#   if [ ! -f \$_file ];then
-#     printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
-#   fi	
-# }
+function check_file_exist()
+{
+  _file=\$1
+  if [ ! -f \$_file ];then
+    printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
+  fi	
+}
 
-# check_file_exist "$POPART_BASE/enable.sh"
-# pushd $POPART_BASE
-#   source "$POPART_BASE/enable.sh"
-# popd
-# check_file_exist "$POPLAR_BASE/enable.sh"
-# pushd $POPLAR_BASE
-#   source "$POPLAR_BASE/enable.sh"
-# popd
+check_file_exist "$POPART_BASE/enable.sh"
+pushd $POPART_BASE
+  source "$POPART_BASE/enable.sh"
+popd
+check_file_exist "$POPLAR_BASE/enable.sh"
+pushd $POPLAR_BASE
+  source "$POPLAR_BASE/enable.sh"
+popd
 
-# # set +ex
-# EOF
+# set +ex
+EOF
 }
 
 function _create_conda_deactivate_script_popart(){
-  warning_msg "This ML Framework is not supported for now."
-#   local file_path=$1
-#   cat <<EOF > "${file_path}"
-# #!/bin/bash
-# # set -ex
-# export TMPDIR=\$_OLD_TMPDIR
-# export CMAKE_PREFIX_PATH=\$_OLD_CMAKE_PREFIX_PATH
-# export PATH=\$_OLD_PATH
-# export CPATH=\$_OLD_CPATH
-# export LIBRARY_PATH=\$_OLD_LIBRARY_PATH
-# export LD_LIBRARY_PATH=\$_OLD_LD_LIBRARY_PATH
-# export OMPI_CPPFLAGS=\$_OLD_OMPI_CPPFLAGS
-# export OPAL_PREFIX=\$_OLD_OPAL_PREFIX
-# export PYTHONPATH=\$_OLD_PYTHONPATH
-# unset GCDA_MONITOR
-# unset TF_CPP_VMODULE
-# unset TF_POPLAR_FLAGS
-# unset IPUOF_CONFIG_PATH
-# unset POPLAR_SDK_ENABLED
-# unset _OLD_TMPDIR
-# unset _OLD_CMAKE_PREFIX_PATH
-# unset _OLD_PATH
-# unset _OLD_CPATH
-# unset _OLD_LIBRARY_PATH
-# unset _OLD_LD_LIBRARY_PATH
-# unset _OLD_OMPI_CPPFLAGS
-# unset _OLD_OPAL_PREFIX
-# unset _OLD_PYTHONPATH
-# # set +ex
-# EOF
+  # warning_msg "This ML Framework is not supported for now."
+  local file_path=$1
+  cat <<EOF > "${file_path}"
+#!/bin/bash
+# set -ex
+export TMPDIR=\$_OLD_TMPDIR
+export CMAKE_PREFIX_PATH=\$_OLD_CMAKE_PREFIX_PATH
+export PATH=\$_OLD_PATH
+export CPATH=\$_OLD_CPATH
+export LIBRARY_PATH=\$_OLD_LIBRARY_PATH
+export LD_LIBRARY_PATH=\$_OLD_LD_LIBRARY_PATH
+export OMPI_CPPFLAGS=\$_OLD_OMPI_CPPFLAGS
+export OPAL_PREFIX=\$_OLD_OPAL_PREFIX
+export PYTHONPATH=\$_OLD_PYTHONPATH
+unset GCDA_MONITOR
+unset IPUOF_CONFIG_PATH
+unset POPLAR_SDK_ENABLED
+unset _OLD_TMPDIR
+unset _OLD_CMAKE_PREFIX_PATH
+unset _OLD_PATH
+unset _OLD_CPATH
+unset _OLD_LIBRARY_PATH
+unset _OLD_LD_LIBRARY_PATH
+unset _OLD_OMPI_CPPFLAGS
+unset _OLD_OPAL_PREFIX
+unset _OLD_PYTHONPATH
+# set +ex
+EOF
 }
 
 function _create_conda_activate_script(){
@@ -611,3 +607,4 @@ if [[ $? != 0 ]]; then
 fi
 
 # unset POP_DIR_BASE
+
