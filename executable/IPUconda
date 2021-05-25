@@ -586,11 +586,14 @@ _input_config_env
 # echo $POP_DIR
 # echo $POPART_BASE
 # echo $POPLAR_BASE
-echo "${_CONDA_CMD}"
+
+# echo "${_CONDA_CMD}"
 bash -ic "${_CONDA_CMD}"
 
-_CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $(which conda)))/envs"
+# _CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $(which conda)))/envs"
+_CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $CONDA_EXE))/envs"
 if [[ ${_CONDA_ENV_NAME} != /* ]]; then
+    # not tested
     mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/"
     mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/"
     _create_conda_activate_script "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh" "${_ML_FRAMEWORK}"
