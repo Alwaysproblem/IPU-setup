@@ -1,16 +1,22 @@
 #!/bin/bash
 
+# ------------------------ default value -----------------------------#
 # EXECUTABLE_CACHE_PATH="${HOME}/.cache"
-EXECUTABLE_CACHE_PATH="/mnt/scratch001/custeng-cn-scratch/yongxiy/cachedir"
+EXECUTABLE_CACHE_PATH="/mnt/data/yongxiy/cachedir"
 
 if [[ -z ${TMPDIR} ]]; then
   TMPDIR="/tmp"
 fi
 
-TMPDIR="/mnt/scratch001/custeng-cn-scratch/yongxiy/tmp"
+TMPDIR="/mnt/data/yongxiy/tmp"
 
 # IPUOF_CONFIG_PATH="${POP_BASE_DIR}/sdk/pod16_ipuof.conf"
 IPUOF_CONFIG_PATH="/localdata/yongxiy/.ipuof.conf.d/ipuof.conf"
+
+POP_DIR_BASE="/mnt/data/yongxiy"
+
+# ------------------------ done --------------------------------------#
+
 
 function warning_msg(){
   printf "\e[93m%s\e[0m" $1
@@ -483,9 +489,6 @@ function conda_wrapper_help_msg(){
   echo "    -h, --help: print helpful message"
 }
 
-POP_DIR_BASE="/mnt/scratch001/custeng-cn-scratch/yongxiy"
-POP_DIR="${POP_DIR_BASE}/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1"
-
 function extract_condaenv_name(){
     local conda_str=$1
     local _prefix=""
@@ -522,8 +525,6 @@ fi
 _CONDA_CMD=$@
 echo "${_CONDA_CMD}"
 extract_condaenv_name ${_CONDA_CMD}
-
-POP_DIR_BASE="/mnt/scratch001/custeng-cn-scratch/yongxiy"
 
 echo "please input sdk base directory:"
 echo -ne "[default $POP_DIR_BASE (abslute path)] >> "
@@ -585,7 +586,7 @@ _input_config_env
 # echo $POP_DIR
 # echo $POPART_BASE
 # echo $POPLAR_BASE
-
+echo "${_CONDA_CMD}"
 bash -ic "${_CONDA_CMD}"
 
 _CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $(which conda)))/envs"
