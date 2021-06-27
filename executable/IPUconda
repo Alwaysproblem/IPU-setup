@@ -2,18 +2,11 @@
 
 # ------------------------ default value -----------------------------#
 # EXECUTABLE_CACHE_PATH="${HOME}/.cache"
-EXECUTABLE_CACHE_PATH="/mnt/data/yongxiy/cachedir"
 
-if [[ -z ${TMPDIR} ]]; then
-  TMPDIR="/tmp"
-fi
-
-TMPDIR="/mnt/data/yongxiy/tmp"
-
-# IPUOF_CONFIG_PATH="${POP_BASE_DIR}/sdk/pod16_ipuof.conf"
-IPUOF_CONFIG_PATH="/localdata/yongxiy/.ipuof.conf.d/ipuof.conf"
-
-POP_DIR_BASE="/mnt/data/yongxiy"
+EXECUTABLE_CACHE_PATH=${IPUCONDA_EXECUTABLE_CACHE_PATH:-"/mnt/data/yongxiy/cachedir"}
+IPUOF_CONFIG_PATH=${IPUCONDA_IPUOF_CONFIG_PATH:-"/localdata/yongxiy/.ipuof.conf.d/ipuof.conf"}
+POP_DIR_BASE=${IPUCONDA_POP_DIR_BASE:-"/mnt/data/yongxiy"}
+TMPDIR=${TMPDIR:-"/mnt/data/yongxiy/tmp"}
 
 # ------------------------ done --------------------------------------#
 
