@@ -1,0 +1,1 @@
+wget -d --header 'X-JFrog-Art-Api:AKCp8jQd49DG1mvtUS8YA2urpzzaapkmSecr9HaFjqMbWXt6tJD4NWNbY4EkXDZVtLj6ttyor' --header 'Authorization: Bearer' $1
