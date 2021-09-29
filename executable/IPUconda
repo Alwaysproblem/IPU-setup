@@ -486,7 +486,7 @@ function conda_wrapper_help_msg(){
 POP_DIR_BASE="/mnt/scratch001/custeng-cn-scratch/yongxiy"
 POP_DIR="${POP_DIR_BASE}/sdk/poplar_sdk-ubuntu_18_04-2.0.0+481-79b41f85d1"
 
-function extract_condaenv_name(){
+function extract_ipu_conda_options(){
     local conda_str=$1
     local _prefix=""
     local _env_name=""
@@ -521,7 +521,7 @@ fi
 
 _CONDA_CMD=$@
 echo "${_CONDA_CMD}"
-extract_condaenv_name ${_CONDA_CMD}
+extract_ipu_conda_options ${_CONDA_CMD}
 
 POP_DIR_BASE="/mnt/scratch001/custeng-cn-scratch/yongxiy"
 
