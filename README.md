@@ -26,3 +26,10 @@ This is a bash shell script for poplar sdk installation from [Graphcore support]
     3. `popvision_enable`, it is wrapper for logging information for popvision software. You can use like `popvision_enable python you_python_file.py` and the directory `popvision` is for popvision software.  
 
 - Change SDK path manually if you IPU configuration is changed.
+
+## TODO
+
+- IPUconda
+  - add update for IPUconda
+  - reading `-y` or `--yes` as default setting to skip input from console
+  - add optitons for automatically install the `tensorflow` or `pytorch` or `popart`
