@@ -472,22 +472,22 @@ extract_condaenv_name $_CONDA_CMD
 compelete_pop_path
 complete_ml_framework
 
-# # bash -ic "${_CONDA_CMD}"
+bash -ic "${_CONDA_CMD}"
 
 extract_conda_base_prefix
-# initial_conda_new_environment ${_CONDA_ENV_DEFAULT_PREFIX} ${_CONDA_ENV_NAME} ${EXECUTABLE_CACHE_PATH} ${IPUOF_CONFIG_PATH} ${TMPDIR} ${ML_FRAMEWORK}
+initial_conda_new_environment ${_CONDA_ENV_DEFAULT_PREFIX} ${_CONDA_ENV_NAME} ${EXECUTABLE_CACHE_PATH} ${IPUOF_CONFIG_PATH} ${TMPDIR} ${ML_FRAMEWORK}
 
-echo ${EXECUTABLE_CACHE_PATH}
-echo ${IPUOF_CONFIG_PATH}
-echo ${POP_DIR_BASE}
-echo ${POPSDK_BASE}
-echo ${POPLAR_BASE}
-echo ${POPART_BASE}
-echo ${MAX_COMPILATION_THREADS}
-echo ${ML_FRAMEWORK}
+# echo ${EXECUTABLE_CACHE_PATH}
+# echo ${IPUOF_CONFIG_PATH}
+# echo ${POP_DIR_BASE}
+# echo ${POPSDK_BASE}
+# echo ${POPLAR_BASE}
+# echo ${POPART_BASE}
+# echo ${MAX_COMPILATION_THREADS}
+# echo ${ML_FRAMEWORK}
 
-echo ${_CONDA_CMD}
-echo ${_CONDA_ENV_NAME}
-echo ${_CONDA_ENV_DEFAULT_PREFIX}
+# echo ${_CONDA_CMD}
+# echo ${_CONDA_ENV_NAME}
+# echo ${_CONDA_ENV_DEFAULT_PREFIX}
 
 # initial_conda_new_environment $(pwd) ${_CONDA_ENV_NAME} ${EXECUTABLE_CACHE_PATH} ${IPUOF_CONFIG_PATH} ${TMPDIR} ${ML_FRAMEWORK}
