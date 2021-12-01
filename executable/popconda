@@ -348,17 +348,73 @@ with this wrapper. You alse can edit those configuration manually if your ipu co
 the path is `$CONDA_PREFIX/etc/conda/activate.d/ipu_set_env.sh` or
 `$CONDA_PREFIX/etc/conda/deactivate.d/ipu_unset_env.sh`
 
-you can declare the environment variables for these default path:
-    `$IPUCONDA_EXECUTABLE_CACHE_PATH` is the default value of `$EXECUTABLE_CACHE_PATH`
-    `$IPUCONDA_IPUOF_CONFIG_PATH` is the default value of `$IPUOF_CONFIG_PATH`
-    `$IPUCONDA_POP_DIR_BASE` is the default value of `$POP_DIR_BASE`
+some enviornment variables description:
+
+For default directory:
+
+POP_DIR_BASE
+    |
+    |
+    --- sdk (hard code)
+         |
+         |
+         --- POPSDK_BASE (for example sdk 2.3.1)
+         |      |
+         |      |
+         |      --- POPLAR_BASE
+         |      |
+         |      --- POPART_BASE
+         |
+         --- POPSDK_BASE (for example sdk 2.4)
+                |
+                |
+                --- POPLAR_BASE
+                |
+                --- POPART_BASE
+
+if you assgined POP_DIR_BASE, you can choose from the multiple versions of sdk.
+if you assgined POPSDK_BASE, you can only use the popsdk you specified
+you also can specify the `POPLAR_BASE` `POPART_BASE` respectly.
+
+These vars need to be set through `popconda setdefault` for the first time
+
+`EXECUTABLE_CACHE_PATH`: executable graph cache path
+`IPUOF_CONFIG_PATH`: IPU configuration file
+`POP_DIR_BASE`: sdk base directory
+`TMPDIR`: tempary variables stored path
+`MAX_COMPILATION_THREADS`: max thread number for compilation
 
 usage:
     IPUconda [conda create enviornment command]
     for example:
-        $ IPUconda conda create -n my-ipu-env python=3.6
+        $ IPUconda setdefaut
+        $ IPUconda <options> -- conda create -n my-ipu-env python=3.6
+        $ IPUconda update
+
+    if you have already set the default configuration
+    you can run 
+        $ IPUconda -- conda create -n my-ipu-env python=3.6
+
+    setdefault: set the default enviornment var for IPU configuration.
+
+    udpate: update the bash script from github repository.
 
     -h, --help: print helpful message
+
+    -ecp, --executable_cache_path: executable graph cache path
+
+    -icf, --ipuof_config_path: IPU configuration file
+
+    -popdir, --popdir_base: sdk base directory
+
+    -popsdk, --popsdk_base: sdk directory
+
+    -poplar, --poplar_base: poplar directory
+
+    -popart, --popart_base: popart directory
+
+    -f, --framework: the machine learning framework one of [tf1, tf2, jax, popart, torch]
+
 EOF
 }
 
@@ -394,29 +450,29 @@ function popconda_setdefualt(){
   local _L_TMPDIR="NotSet"
   local _L_MAX_COMPILATION_THREADS=40
 
-  _input "please enter executable graph cache path (absolute path):" ${_L_EXECUTABLE_CACHE_PATH}
+  _input "please enter executable graph cache path (absolute path) [EXECUTABLE_CACHE_PATH]:" ${_L_EXECUTABLE_CACHE_PATH}
   _L_EXECUTABLE_CACHE_PATH=${_INPUTS:-${_L_EXECUTABLE_CACHE_PATH}}
   if [ ! -d ${_L_EXECUTABLE_CACHE_PATH} ];then
     mkdir -p ${_L_EXECUTABLE_CACHE_PATH}
   fi
 
-  _input "please enter IPU configuration file (absolute path):" ${_L_IPUOF_CONFIG_PATH}
+  _input "please enter IPU configuration file (absolute path) [IPUOF_CONFIG_PATH]:" ${_L_IPUOF_CONFIG_PATH}
   _L_IPUOF_CONFIG_PATH=${_INPUTS:-${_L_IPUOF_CONFIG_PATH}}
   check_file_exist ${_L_IPUOF_CONFIG_PATH}
 
-  _input "please input sdk base directory:" ${_L_POP_DIR_BASE}
+  _input "please input sdk base directory (absolute path) [POP_DIR_BASE]:" ${_L_POP_DIR_BASE}
   _L_POP_DIR_BASE=${_INPUTS:-${_L_POP_DIR_BASE}}
   if [ ! -d ${_L_POP_DIR_BASE} ];then
     mkdir -p ${_L_POP_DIR_BASE}
   fi
 
-  _input "please enter tempary variables stored path (absolute path):" ${_L_TMPDIR}
+  _input "please enter tempary variables stored path (absolute path) [TMPDIR]:" ${_L_TMPDIR}
   _L_TMPDIR=${_INPUTS:-${_L_TMPDIR}}
   if [ ! -d ${_L_TMPDIR} ];then
     mkdir -p ${_L_TMPDIR}
   fi
 
-  _input "please enter tempary variables stored path (absolute path):" ${_L_MAX_COMPILATION_THREADS}
+  _input "please enter max thread number for compilation (absolute path) [MAX_COMPILATION_THREADS]:" ${_L_MAX_COMPILATION_THREADS}
   _L_MAX_COMPILATION_THREADS=${_INPUTS:-${_L_MAX_COMPILATION_THREADS}}
   _L_MAX_COMPILATION_THREADS="$(($_L_MAX_COMPILATION_THREADS + 1 - 1))" # check _L_MAX_COMPILATION_THREADS is int number
 
