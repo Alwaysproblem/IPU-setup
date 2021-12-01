@@ -1,11 +1,13 @@
 #!/bin/bash
 
 function warning_msg(){
-  printf "\e[93mWARNING: %s\e[0m" $1
+  printf "\e[93m%s\e[0m" "WARNING: $1"
+  echo ""
 }
 
 function error_msg(){
-  printf "\e[31mERROR: %s\e[0m" $1
+  printf "\e[31m%s\e[0m" "ERROR: $1"
+  echo ""
 }
 
 function load_dot_env_defaults() {
@@ -301,22 +303,24 @@ function compelete_pop_path(){
 }
 
 function mapping_ml_frameworks(){
-  local lower_case=${1,,}
-  case $1 in
+  local lower_case=$@
+  lower_case=${lower_case,,}
+  echo $lower_case
+  case $lower_case in
     "tensorflow 1.x" | "tf1")
-                            ML_FRAMEWORK=TF1
+                            ML_FRAMEWORK="TF1"
                             ;;
     "tensorflow 2.x" | "tf2")
-                            ML_FRAMEWORK=TF2
+                            ML_FRAMEWORK="TF2"
                             ;;
     "pytorch/poptorch" | "torch")
-                            ML_FRAMEWORK=Torch
+                            ML_FRAMEWORK="Torch"
                             ;;
     "popart")
-                            ML_FRAMEWORK=Popart
+                            ML_FRAMEWORK="Popart"
                             ;;
     "jax")
-                            ML_FRAMEWORK=Jax
+                            ML_FRAMEWORK="Jax"
                             ;;
   esac
 }
@@ -413,7 +417,7 @@ complete_ml_framework
 
 # # bash -ic "${_CONDA_CMD}"
 
-# extract_conda_base_prefix
+extract_conda_base_prefix
 # initial_conda_new_environment ${_CONDA_ENV_DEFAULT_PREFIX} ${_CONDA_ENV_NAME} ${EXECUTABLE_CACHE_PATH} ${IPUOF_CONFIG_PATH} ${TMPDIR} ${ML_FRAMEWORK}
 
 echo ${EXECUTABLE_CACHE_PATH}
@@ -424,6 +428,7 @@ echo ${POPLAR_BASE}
 echo ${POPART_BASE}
 echo ${MAX_COMPILATION_THREADS}
 echo ${_CONDA_ENV_DEFAULT_PREFIX}
+echo ${ML_FRAMEWORK}
 
 echo $_CONDA_CMD
 echo ${_CONDA_ENV_NAME}
