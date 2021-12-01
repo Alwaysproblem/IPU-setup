@@ -27,8 +27,8 @@ POP_DIR_BASE="NotSet"
 TMPDIR="NotSet"
 POPSDK_BASE="NotSet"
 MAX_COMPILATION_THREADS=40
-_DOT_ENV_POPCONDA=".ipucondaenv"
-# _DOT_ENV_POPCONDA="$HOME/.ipuenv/.ipucondaenv"
+# _DOT_ENV_POPCONDA=".ipucondaenv"
+_DOT_ENV_POPCONDA="$HOME/.ipuenv/.ipucondaenv"
 
 load_dot_env_defaults ${_DOT_ENV_POPCONDA}
 # ------------------------ done --------------------------------------#
