@@ -27,11 +27,10 @@ POP_DIR_BASE="NotSet"
 TMPDIR="NotSet"
 POPSDK_BASE="NotSet"
 MAX_COMPILATION_THREADS=40
+_DOT_ENV_POPCONDA=".ipucondaenv"
+# _DOT_ENV_POPCONDA="$HOME/.ipuenv/.ipucondaenv"
 
-
-load_dot_env_defaults .ipucondaenv
-# load_dot_env_defaults $HOME/.ipuenv/.ipucondaenv
-
+load_dot_env_defaults ${_DOT_ENV_POPCONDA}
 # ------------------------ done --------------------------------------#
 
 POPLAR_BASE="NotSet"
@@ -243,14 +242,6 @@ function initial_conda_new_environment(){
   fi
 }
 
-function popconda_update(){
-  echo -e "update"
-}
-
-function popconda_setdefualt(){
-  echo -e "setdefualt"
-}
-
 function compelete_popdir_with_popdir(){
   local POP_DIR="${POP_DIR_BASE}/sdk"
 
@@ -353,6 +344,73 @@ dfa$file_path
 df
 asdf
 asdf
+EOF
+}
+
+function popconda_update(){
+  echo -e "update the popconda"
+  wget -O $HOME/.ipuenv/popconda https://raw.githubusercontent.com/Alwaysproblem/IPU-setup/main/executable/popconda
+}
+
+function check_file_exist()
+{
+  local _file=$1
+  if [ ! -f $_file ];then
+    warning_msg "$_file is not file or file does not exist"
+  fi
+}
+
+function _input() {
+  echo "${1}"
+  if [[ $# -eq 2 ]]; then
+    echo -ne "[default: ${2}] >> "
+  else
+    echo -ne ">> "
+  fi
+  read _INPUTS
+}
+
+function popconda_setdefualt(){
+
+  local _L_EXECUTABLE_CACHE_PATH="NotSet"
+  local _L_IPUOF_CONFIG_PATH="NotSet"
+  local _L_POP_DIR_BASE="NotSet"
+  local _L_TMPDIR="NotSet"
+  local _L_MAX_COMPILATION_THREADS=40
+
+  _input "please enter executable graph cache path (absolute path):" ${_L_EXECUTABLE_CACHE_PATH}
+  _L_EXECUTABLE_CACHE_PATH=${_INPUTS:-${_L_EXECUTABLE_CACHE_PATH}}
+  if [ ! -d ${_L_EXECUTABLE_CACHE_PATH} ];then
+    mkdir -p ${_L_EXECUTABLE_CACHE_PATH}
+  fi
+
+  _input "please enter IPU configuration file (absolute path):" ${_L_IPUOF_CONFIG_PATH}
+  _L_IPUOF_CONFIG_PATH=${_INPUTS:-${_L_IPUOF_CONFIG_PATH}}
+  check_file_exist ${_L_IPUOF_CONFIG_PATH}
+
+  _input "please input sdk base directory:" ${_L_POP_DIR_BASE}
+  _L_POP_DIR_BASE=${_INPUTS:-${_L_POP_DIR_BASE}}
+  if [ ! -d ${_L_POP_DIR_BASE} ];then
+    mkdir -p ${_L_POP_DIR_BASE}
+  fi
+
+  _input "please enter tempary variables stored path (absolute path):" ${_L_TMPDIR}
+  _L_TMPDIR=${_INPUTS:-${_L_TMPDIR}}
+  if [ ! -d ${_L_TMPDIR} ];then
+    mkdir -p ${_L_TMPDIR}
+  fi
+
+  _input "please enter tempary variables stored path (absolute path):" ${_L_MAX_COMPILATION_THREADS}
+  _L_MAX_COMPILATION_THREADS=${_INPUTS:-${_L_MAX_COMPILATION_THREADS}}
+  _L_MAX_COMPILATION_THREADS="$(($_L_MAX_COMPILATION_THREADS + 1 - 1))" # check _L_MAX_COMPILATION_THREADS is int number
+
+cat <<EOF > ${_DOT_ENV_POPCONDA}
+EXECUTABLE_CACHE_PATH="$_L_EXECUTABLE_CACHE_PATH"
+IPUOF_CONFIG_PATH="$_L_IPUOF_CONFIG_PATH"
+POP_DIR_BASE="$_L_POP_DIR_BASE"
+TMPDIR="$_L_TMPDIR"
+MAX_COMPILATION_THREADS=$_L_MAX_COMPILATION_THREADS
+
 EOF
 }
 
