@@ -305,7 +305,6 @@ function compelete_pop_path(){
 function mapping_ml_frameworks(){
   local lower_case=$@
   lower_case=${lower_case,,}
-  echo $lower_case
   case $lower_case in
     "tensorflow 1.x" | "tf1")
                             ML_FRAMEWORK="TF1"
@@ -427,8 +426,10 @@ echo ${POPSDK_BASE}
 echo ${POPLAR_BASE}
 echo ${POPART_BASE}
 echo ${MAX_COMPILATION_THREADS}
-echo ${_CONDA_ENV_DEFAULT_PREFIX}
 echo ${ML_FRAMEWORK}
 
-echo $_CONDA_CMD
+echo ${_CONDA_CMD}
 echo ${_CONDA_ENV_NAME}
+echo ${_CONDA_ENV_DEFAULT_PREFIX}
+
+# initial_conda_new_environment $(pwd) ${_CONDA_ENV_NAME} ${EXECUTABLE_CACHE_PATH} ${IPUOF_CONFIG_PATH} ${TMPDIR} ${ML_FRAMEWORK}
