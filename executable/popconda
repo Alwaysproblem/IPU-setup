@@ -350,6 +350,7 @@ EOF
 function popconda_update(){
   echo -e "update the popconda"
   wget -O $HOME/.ipuenv/popconda https://raw.githubusercontent.com/Alwaysproblem/IPU-setup/main/executable/popconda
+  chmod +x $HOME/.ipuenv/popconda
 }
 
 function check_file_exist()
