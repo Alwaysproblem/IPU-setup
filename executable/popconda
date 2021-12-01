@@ -1,0 +1,494 @@
+#!/bin/bash
+
+function warning_msg(){
+  printf "\e[93m%s\e[0m" "WARNING: $1"
+  echo ""
+}
+
+function error_msg(){
+  printf "\e[31m%s\e[0m" "ERROR: $1"
+  echo ""
+}
+
+function load_dot_env_defaults() {
+  local dot_env=$1
+  if [ -f ${dot_env} ]
+  then
+    export $(cat ${dot_env} | xargs)
+  else
+    warning_msg "better to run \`popconda setdefault\` first"
+  fi
+}
+
+# ------------------------ default value -----------------------------#
+EXECUTABLE_CACHE_PATH="NotSet"
+IPUOF_CONFIG_PATH="NotSet"
+POP_DIR_BASE="NotSet"
+TMPDIR="NotSet"
+POPSDK_BASE="NotSet"
+MAX_COMPILATION_THREADS=40
+# _DOT_ENV_POPCONDA=".ipucondaenv"
+_DOT_ENV_POPCONDA="$HOME/.ipuenv/.ipucondaenv"
+
+load_dot_env_defaults ${_DOT_ENV_POPCONDA}
+# ------------------------ done --------------------------------------#
+
+POPLAR_BASE="NotSet"
+POPART_BASE="NotSet"
+SDKVERSION="NotSet"
+ML_FRAMEWORK="NotSet"
+_CONDA_CMD="NotSet"
+_CONDA_ENV_NAME="NotSet"
+_CONDA_ENV_DEFAULT_PREFIX="NotSet"
+
+function warning_msg_unspported_jax(){
+  local _ML_FRAMEWORK=$1
+  if [[ ${_ML_FRAMEWORK} == "Jax" ]]; then
+    warning_msg "This Jax Framework is not supported for now."
+  fi
+}
+
+function _create_conda_activate_script(){
+  local file_path=$1
+  local _EXECUTABLE_CACHE_PATH=$2
+  local _IPUOF_CONFIG_PATH=$3
+  local _TMPDIR=$4
+  local _ML_FRAMEWORK=$5
+
+  warning_msg_unspported_jax ${_ML_FRAMEWORK}
+
+  echo '#!/bin/bash' >> ${file_path}
+  echo '# set -ex' >> ${file_path}
+  echo 'export GCDA_MONITOR=1' >> ${file_path}
+
+  if [[ ${_ML_FRAMEWORK} == TF* ]]; then
+    # echo 'export TF_CPP_VMODULE="poplar_compiler=1,poplar_executable=1"'
+    if [[ ! -z ${_EXECUTABLE_CACHE_PATH} ]]; then
+      echo "export TF_POPLAR_FLAGS='--max_compilation_threads=$MAX_COMPILATION_THREADS --executable_cache_path=${EXECUTABLE_CACHE_PATH} --show_progress_bar=true'" >> ${file_path}
+    else
+      echo "export TF_POPLAR_FLAGS='--max_compilation_threads=$MAX_COMPILATION_THREADS --show_progress_bar=true'" >> ${file_path}
+    fi
+  fi
+
+  if [[ ${_ML_FRAMEWORK} == Torch ]] && [[ ! -z ${_EXECUTABLE_CACHE_PATH} ]]; then
+    echo "export POPTORCH_CACHE_DIR=${EXECUTABLE_CACHE_PATH}" >> ${file_path}
+  fi
+
+  if [[ ! -z ${_TMPDIR} ]] && [[ ${_TMPDIR} != NotSet ]];then
+    echo "export TMPDIR=$TMPDIR" >> ${file_path}
+    echo 'export _OLD_TMPDIR=$TMPDIR' >> ${file_path}
+  fi
+
+  if [[ ! -z ${_IPUOF_CONFIG_PATH} ]] && [[ ${_IPUOF_CONFIG_PATH} != NotSet ]];then
+    echo "export IPUOF_CONFIG_PATH=$IPUOF_CONFIG_PATH" >> ${file_path}
+  fi
+
+  echo 'export _OLD_CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH' >> ${file_path}
+  echo 'export _OLD_PATH=${PATH#$CONDA_PREFIX/bin:}' >> ${file_path}
+  echo 'export _OLD_CPATH=$CPATH' >> ${file_path}
+  echo 'export _OLD_LIBRARY_PATH=$LIBRARY_PATH' >> ${file_path}
+  echo 'export _OLD_LD_LIBRARY_PATH=$LD_LIBRARY_PATH' >> ${file_path}
+  echo 'export _OLD_OMPI_CPPFLAGS=$OMPI_CPPFLAGS' >> ${file_path}
+  echo 'export _OLD_OPAL_PREFIX=$OPAL_PREFIX' >> ${file_path}
+  echo 'export _OLD_PYTHONPATH=$PYTHONPATH' >> ${file_path}
+  echo '' >> ${file_path}
+
+cat <<"EOF" >> ${file_path}
+function check_file_exist()
+{
+  _file=$1
+  if [ ! -f $_file ];then
+    printf "\e[93m%s is not file or file does not exist\n\e[0m" $_file
+  fi
+}
+EOF
+
+cat <<EOF >> ${file_path}
+check_file_exist "$POPLAR_BASE/enable.sh"
+pushd $POPLAR_BASE
+  source "$POPLAR_BASE/enable.sh"
+popd
+
+EOF
+
+if [[ ! -z ${POPART_BASE} ]] && [[ ${POPART_BASE} != NotSet ]];then
+cat <<EOF >> ${file_path}
+check_file_exist "$POPART_BASE/enable.sh"
+pushd $POPART_BASE
+  source "$POPART_BASE/enable.sh"
+popd
+
+EOF
+fi
+
+  echo '# set +ex' >> ${file_path}
+
+}
+
+function _create_conda_deactivate_script(){
+  local file_path=$1
+  local _EXECUTABLE_CACHE_PATH=$2
+  local _IPUOF_CONFIG_PATH=$3
+  local _TMPDIR=$4
+  local _ML_FRAMEWORK=$5
+
+  warning_msg_unspported_jax ${_ML_FRAMEWORK}
+
+  echo '#!/bin/bash' > ${file_path}
+  echo '# set -ex' >> ${file_path}
+
+  if [[ ! -z ${_TMPDIR} ]] && [[ ${_TMPDIR} != NotSet ]];then
+    echo 'export TMPDIR=$_OLD_TMPDIR' >> ${file_path}
+    echo 'unset _OLD_TMPDIR' >> ${file_path}
+  fi
+
+  if [[ ! -z ${_IPUOF_CONFIG_PATH} ]] && [[ ${_IPUOF_CONFIG_PATH} != NotSet ]];then
+    echo 'unset IPUOF_CONFIG_PATH' >> ${file_path}
+  fi
+
+  echo 'export CMAKE_PREFIX_PATH=$_OLD_CMAKE_PREFIX_PATH' >> ${file_path}
+  echo 'export PATH=$_OLD_PATH' >> ${file_path}
+  echo 'export CPATH=$_OLD_CPATH' >> ${file_path}
+  echo 'export LIBRARY_PATH=$_OLD_LIBRARY_PATH' >> ${file_path}
+  echo 'export LD_LIBRARY_PATH=$_OLD_LD_LIBRARY_PATH' >> ${file_path}
+  echo 'export OMPI_CPPFLAGS=$_OLD_OMPI_CPPFLAGS' >> ${file_path}
+  echo 'export OPAL_PREFIX=$_OLD_OPAL_PREFIX' >> ${file_path}
+  echo 'export PYTHONPATH=$_OLD_PYTHONPATH' >> ${file_path}
+  echo 'unset GCDA_MONITOR' >> ${file_path}
+  echo 'unset POPLAR_SDK_ENABLED' >> ${file_path}
+
+  if [[ ${_ML_FRAMEWORK} == TF* ]];then
+    # echo 'unset TF_CPP_VMODULE' >> ${file_path}
+    echo 'unset TF_POPLAR_FLAGS' >> ${file_path}
+  fi
+
+  if [[ ${_ML_FRAMEWORK} == Torch ]] && [[ ! -z ${_EXECUTABLE_CACHE_PATH} ]];then
+    echo 'unset POPTORCH_CACHE_DIR' >> ${file_path}
+  fi
+
+  echo 'unset _OLD_CMAKE_PREFIX_PATH' >> ${file_path}
+  echo 'unset _OLD_PATH' >> ${file_path}
+  echo 'unset _OLD_CPATH' >> ${file_path}
+  echo 'unset _OLD_LIBRARY_PATH' >> ${file_path}
+  echo 'unset _OLD_LD_LIBRARY_PATH' >> ${file_path}
+  echo 'unset _OLD_OMPI_CPPFLAGS' >> ${file_path}
+  echo 'unset _OLD_OPAL_PREFIX' >> ${file_path}
+  echo 'unset _OLD_PYTHONPATH' >> ${file_path}
+  echo '# set +ex' >> ${file_path}
+
+}
+
+function extract_condaenv_name(){
+    local conda_str=$1
+    local _prefix=""
+    local _env_name=""
+
+    if [[ $conda_str != "conda" ]] && [[ $conda_str != "miniconda" ]] && [[ $conda_str != "manba" ]] && [[ $conda_str != "micromanba" ]]; then
+        print_popconda_helper_msg
+        exit 0
+    fi
+
+    while [ "$1" != "" ]; do
+        case $1 in
+            -p | --prefix)          shift
+                                    _prefix=$1
+                                    ;;
+            -n | --name )           shift
+                                    _env_name=$1
+                                    ;;
+        esac
+        shift
+    done
+    if [[ ${_prefix} != "" && $_env_name != "" ]]; then
+        if [[ ${_prefix} == /* ]]; then
+            _prefix=${_prefix}
+        else
+            _prefix="${PWD}/${_prefix}"
+        fi
+        _CONDA_ENV_NAME="${_prefix}/${_env_name}"
+    else
+        _CONDA_ENV_NAME="${_prefix}${_env_name}"
+    fi
+}
+
+function extract_conda_base_prefix(){
+  local _CONDA_ENV_DEFAULT="$(conda info -e | grep base | awk -F" " '{print $3}')"
+  _CONDA_ENV_DEFAULT_PREFIX="${_CONDA_ENV_DEFAULT}/envs"
+}
+
+function initial_conda_new_environment(){
+  local _CONDA_ENV_DEFAULT_PREFIX_=$1
+  local _CONDA_ENV_NAME_=$2
+
+  local _EXECUTABLE_CACHE_PATH=$3
+  local _IPUOF_CONFIG_PATH=$4
+  local _TMPDIR=$5
+  local _ML_FRAMEWORK=$6
+
+  if [[ ${_CONDA_ENV_NAME} != /* ]]; then
+      mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX_}/${_CONDA_ENV_NAME_}/etc/conda/activate.d/"
+      mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX_}/${_CONDA_ENV_NAME_}/etc/conda/deactivate.d/"
+      local env_bash_act="${_CONDA_ENV_DEFAULT_PREFIX_}/${_CONDA_ENV_NAME_}/etc/conda/activate.d/ipu_set_env.sh"
+      local env_bash_deact="${_CONDA_ENV_DEFAULT_PREFIX_}/${_CONDA_ENV_NAME_}/etc/conda/deactivate.d/ipu_unset_env.sh"
+      _create_conda_activate_script "${env_bash_act}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${_TMPDIR} ${_ML_FRAMEWORK}
+      _create_conda_deactivate_script "${env_bash_deact}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${_TMPDIR} ${_ML_FRAMEWORK}
+  else
+      mkdir -p "${_CONDA_ENV_NAME_}/etc/conda/activate.d/"
+      mkdir -p "${_CONDA_ENV_NAME_}/etc/conda/deactivate.d/"
+      local _env_bash_act="${_CONDA_ENV_NAME_}/etc/conda/activate.d/ipu_set_env.sh"
+      local _env_bash_deact="${_CONDA_ENV_NAME_}/etc/conda/deactivate.d/ipu_unset_env.sh"
+      _create_conda_activate_script "${_env_bash_act}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${_TMPDIR} ${_ML_FRAMEWORK}
+      _create_conda_deactivate_script "${_env_bash_deact}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${_TMPDIR} ${_ML_FRAMEWORK}
+  fi
+}
+
+function compelete_popdir_with_popdir(){
+  local POP_DIR="${POP_DIR_BASE}/sdk"
+
+  cd "${POP_DIR_BASE}/sdk"
+  prompt="Please select a SDK version:"
+  options=( $(find -maxdepth 1 -name 'poplar_sdk*' -type d -printf '%P ' | xargs -0) )
+
+  PS3="$prompt "
+  select opt in "${options[@]}" "Quit" ; do 
+      if (( REPLY == 1 + ${#options[@]} )) ; then
+          exit
+
+      elif (( REPLY > 0 && REPLY <= ${#options[@]} )) ; then
+          echo  "poplar sdk: $opt"
+          POP_DIR="${POP_DIR}/$opt"
+          break
+      else
+          echo "Invalid option. Try another one."
+      fi
+  done
+  compelete_popdir_with_popsdk_dir ${POP_DIR}
+  cd -
+}
+
+function compelete_popdir_with_popsdk_dir(){
+  local pop_sdk=$1
+  POPART_BASE=$(find $pop_sdk -maxdepth 1 -name "popart-*")
+  POPLAR_BASE=$(find $pop_sdk -maxdepth 1 -name "poplar-*")
+}
+
+function compelete_pop_path(){
+  if [[ ! -z ${POPLAR_BASE} ]] && [[ ${POPLAR_BASE} != NotSet ]];then
+    echo -e ""
+    if [[ ! -z ${POPART_BASE} ]] && [[ ${POPART_BASE} == NotSet ]];then
+      warning_msg "Should set \$POPART_BASE if you need to use PopArt, Paddle or PopTroch."
+    fi
+  else
+    if [[ ! -z ${POPSDK_BASE} ]] && [[ ${POPSDK_BASE} != NotSet ]]; then
+      compelete_popdir_with_popsdk_dir ${POPSDK_BASE}
+    else
+      if [[ ! -z ${POP_DIR_BASE} ]] && [[ ${POP_DIR_BASE} != NotSet ]]; then
+        compelete_popdir_with_popdir ${POP_DIR_BASE}
+      else
+        warning_msg "Better to use \`popconda setdefault\` command"
+        error_msg "Please set one of those, \$POPLAR_BASE, \$POPART_BASE, \$POPSDK_BASE, \$POP_DIR_BASE"
+        exit 1
+      fi
+    fi
+  fi
+}
+
+function mapping_ml_frameworks(){
+  local lower_case=$@
+  lower_case=${lower_case,,}
+  case $lower_case in
+    "tensorflow 1.x" | "tf1")
+                            ML_FRAMEWORK="TF1"
+                            ;;
+    "tensorflow 2.x" | "tf2")
+                            ML_FRAMEWORK="TF2"
+                            ;;
+    "pytorch/poptorch" | "torch")
+                            ML_FRAMEWORK="Torch"
+                            ;;
+    "popart")
+                            ML_FRAMEWORK="Popart"
+                            ;;
+    "jax")
+                            ML_FRAMEWORK="Jax"
+                            ;;
+  esac
+}
+
+function complete_ml_framework() {
+  if [[ -z ${ML_FRAMEWORK} ]] || [[ ${ML_FRAMEWORK} == NotSet ]]; then
+    prompt="Please select a ML Framework:"
+    options=( "Tensorflow 1.x" "Tensorflow 2.x" "Pytorch/Poptorch" "PopArt" "Jax" )
+    PS3="$prompt "
+    select opt in "${options[@]}" "Quit" ; do 
+        if (( REPLY == 1 + ${#options[@]} )) ; then
+            exit
+
+        elif (( REPLY > 0 && REPLY <= ${#options[@]} )) ; then
+            echo  "Chosen Framework: $opt"
+            _ML_FRAMEWORK="$opt"
+            mapping_ml_frameworks ${_ML_FRAMEWORK}
+            break
+        else
+            echo "Invalid option. Try another one."
+        fi
+    done
+  fi
+}
+
+function print_popconda_helper_msg(){
+cat <<"EOF"
+adfajksdfadf
+a
+dfa$file_path
+df
+asdf
+asdf
+EOF
+}
+
+function popconda_update(){
+  echo -e "update the popconda"
+  wget -O $HOME/.ipuenv/popconda https://raw.githubusercontent.com/Alwaysproblem/IPU-setup/main/executable/popconda
+  chmod +x $HOME/.ipuenv/popconda
+}
+
+function check_file_exist()
+{
+  local _file=$1
+  if [ ! -f $_file ];then
+    warning_msg "$_file is not file or file does not exist"
+  fi
+}
+
+function _input() {
+  echo "${1}"
+  if [[ $# -eq 2 ]]; then
+    echo -ne "[default: ${2}] >> "
+  else
+    echo -ne ">> "
+  fi
+  read _INPUTS
+}
+
+function popconda_setdefualt(){
+
+  local _L_EXECUTABLE_CACHE_PATH="NotSet"
+  local _L_IPUOF_CONFIG_PATH="NotSet"
+  local _L_POP_DIR_BASE="NotSet"
+  local _L_TMPDIR="NotSet"
+  local _L_MAX_COMPILATION_THREADS=40
+
+  _input "please enter executable graph cache path (absolute path):" ${_L_EXECUTABLE_CACHE_PATH}
+  _L_EXECUTABLE_CACHE_PATH=${_INPUTS:-${_L_EXECUTABLE_CACHE_PATH}}
+  if [ ! -d ${_L_EXECUTABLE_CACHE_PATH} ];then
+    mkdir -p ${_L_EXECUTABLE_CACHE_PATH}
+  fi
+
+  _input "please enter IPU configuration file (absolute path):" ${_L_IPUOF_CONFIG_PATH}
+  _L_IPUOF_CONFIG_PATH=${_INPUTS:-${_L_IPUOF_CONFIG_PATH}}
+  check_file_exist ${_L_IPUOF_CONFIG_PATH}
+
+  _input "please input sdk base directory:" ${_L_POP_DIR_BASE}
+  _L_POP_DIR_BASE=${_INPUTS:-${_L_POP_DIR_BASE}}
+  if [ ! -d ${_L_POP_DIR_BASE} ];then
+    mkdir -p ${_L_POP_DIR_BASE}
+  fi
+
+  _input "please enter tempary variables stored path (absolute path):" ${_L_TMPDIR}
+  _L_TMPDIR=${_INPUTS:-${_L_TMPDIR}}
+  if [ ! -d ${_L_TMPDIR} ];then
+    mkdir -p ${_L_TMPDIR}
+  fi
+
+  _input "please enter tempary variables stored path (absolute path):" ${_L_MAX_COMPILATION_THREADS}
+  _L_MAX_COMPILATION_THREADS=${_INPUTS:-${_L_MAX_COMPILATION_THREADS}}
+  _L_MAX_COMPILATION_THREADS="$(($_L_MAX_COMPILATION_THREADS + 1 - 1))" # check _L_MAX_COMPILATION_THREADS is int number
+
+cat <<EOF > ${_DOT_ENV_POPCONDA}
+EXECUTABLE_CACHE_PATH="$_L_EXECUTABLE_CACHE_PATH"
+IPUOF_CONFIG_PATH="$_L_IPUOF_CONFIG_PATH"
+POP_DIR_BASE="$_L_POP_DIR_BASE"
+TMPDIR="$_L_TMPDIR"
+MAX_COMPILATION_THREADS=$_L_MAX_COMPILATION_THREADS
+
+EOF
+}
+
+function parse_args_from_console() {
+    local prompt_str=$1
+
+    while [ "$1" != "--" ] && [[ $# -gt 0 ]]; do
+        case $1 in
+            -ecp | --executable_cache_path)           shift
+                                                      EXECUTABLE_CACHE_PATH=$1
+                                                      ;;
+            -icf | --ipuof_config_path)               shift
+                                                      IPUOF_CONFIG_PATH=$1
+                                                      ;;
+            -popdir | --popdir_base)                  shift
+                                                      POP_DIR_BASE=$1
+                                                      ;;
+            -popsdk | --popsdk_base)                  shift
+                                                      POPSDK_BASE=$1
+                                                      ;;
+            -poplar | --poplar_base)                  shift
+                                                      POPLAR_BASE=$1
+                                                      ;;
+            -popart | --popart_base)                  shift
+                                                      POPART_BASE=$1
+                                                      ;;
+            -f | --framework)                         shift
+                                                      mapping_ml_frameworks $1
+                                                      ;;
+            update)                                   shift
+                                                      popconda_update
+                                                      exit 0
+                                                      ;;
+            setdefault)                               shift
+                                                      popconda_setdefualt
+                                                      exit 0
+                                                      ;;
+            -h | --help)                              print_popconda_helper_msg
+                                                      exit 1
+                                                      ;;
+            *)                                        print_popconda_helper_msg
+                                                      exit 1
+                                                      ;;
+        esac
+        shift
+    done
+    shift
+    _CONDA_CMD=$@
+    if [[ ${#_CONDA_CMD} == 0 ]]; then
+      print_popconda_helper_msg;
+      exit 1
+    fi
+}
+
+
+
+parse_args_from_console $@
+extract_condaenv_name $_CONDA_CMD
+compelete_pop_path
+complete_ml_framework
+
+bash -ic "${_CONDA_CMD}"
+
+extract_conda_base_prefix
+initial_conda_new_environment ${_CONDA_ENV_DEFAULT_PREFIX} ${_CONDA_ENV_NAME} ${EXECUTABLE_CACHE_PATH} ${IPUOF_CONFIG_PATH} ${TMPDIR} ${ML_FRAMEWORK}
+
+# echo ${EXECUTABLE_CACHE_PATH}
+# echo ${IPUOF_CONFIG_PATH}
+# echo ${POP_DIR_BASE}
+# echo ${POPSDK_BASE}
+# echo ${POPLAR_BASE}
+# echo ${POPART_BASE}
+# echo ${MAX_COMPILATION_THREADS}
+# echo ${ML_FRAMEWORK}
+
+# echo ${_CONDA_CMD}
+# echo ${_CONDA_ENV_NAME}
+# echo ${_CONDA_ENV_DEFAULT_PREFIX}
+
+# initial_conda_new_environment $(pwd) ${_CONDA_ENV_NAME} ${EXECUTABLE_CACHE_PATH} ${IPUOF_CONFIG_PATH} ${TMPDIR} ${ML_FRAMEWORK}
