@@ -1,5 +1,0 @@
-EXECUTABLE_CACHE_PATH="/mnt/data/yongxiy/cachedir"
-IPUOF_CONFIG_PATH="/localdata/yongxiy/.ipuof.conf.d/ipuof.conf"
-POP_DIR_BASE="/mnt/data/yongxiy"
-TMPDIR="/mnt/data/yongxiy/tmp"
-MAX_COMPILATION_THREADS=80

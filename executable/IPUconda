@@ -32,7 +32,7 @@ function check_file_exist()
   if [ ! -f $_file ];then
     printf "%s is not file or file does not exist\n" $_file
     exit 1
-  fi	
+  fi
 }
 
 function _input_config_env(){
@@ -78,7 +78,7 @@ function check_file_exist()
   _file=\$1
   if [ ! -f \$_file ];then
     printf "\e[93m%s is not file or file does not exist\n\e[0m" \$_file
-  fi	
+  fi
 }
 
 check_file_exist "$POPART_BASE/enable.sh"
