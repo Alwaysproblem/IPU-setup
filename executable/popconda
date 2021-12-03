@@ -387,13 +387,13 @@ These vars need to be set through `popconda setdefault` for the first time
 usage:
     IPUconda [conda create enviornment command]
     for example:
-        $ IPUconda setdefaut
-        $ IPUconda <options> -- conda create -n my-ipu-env python=3.6
-        $ IPUconda update
+        $ popconda setdefaut
+        $ popconda <options> -- conda create -n my-ipu-env python=3.6
+        $ popconda update
 
     if you have already set the default configuration
     you can run 
-        $ IPUconda -- conda create -n my-ipu-env python=3.6
+        $ popconda -- conda create -n my-ipu-env python=3.6
 
     setdefault: set the default enviornment var for IPU configuration.
 
