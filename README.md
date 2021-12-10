@@ -1,6 +1,12 @@
 # IPU setup for Conda and Vscode
 
-This is a bash shell script for poplar sdk installation from [Graphcore support](https://www.graphcore.ai/support)
+## Description
+
+This is a bash script for conda wrapper to create a IPU related conda enviornment.
+
+## Installation
+
+poplar sdk installation from [Graphcore support](https://www.graphcore.ai/support)
 
 **Note: This is not official bash installation script and only tested on Ubuntu 18.04**
 
@@ -11,8 +17,9 @@ This is a bash shell script for poplar sdk installation from [Graphcore support]
 - Download bash script
 
     ```bash
-    $ wget https://raw.githubusercontent.com/Alwaysproblem/IPU-setup/main/ipu-setup.sh
-    $ bash ipu-setup.sh
+    $ wget -O $HOME/.ipuenv/popconda https://raw.githubusercontent.com/Alwaysproblem/IPU-setup/main/executable/popconda
+    $ export PATH="$HOME/.ipuenv/:$PATH"
+    $ popconda --help
     ```
 
 - After that, follow the instructions

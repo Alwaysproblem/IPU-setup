@@ -1,16 +1,15 @@
 #!/bin/bash
 
+# ------------------------ default value -----------------------------#
 # EXECUTABLE_CACHE_PATH="${HOME}/.cache"
-EXECUTABLE_CACHE_PATH="/mnt/scratch001/custeng-cn-scratch/yongxiy/cachedir"
 
-if [[ -z ${TMPDIR} ]]; then
-  TMPDIR="/tmp"
-fi
+EXECUTABLE_CACHE_PATH=${IPUCONDA_EXECUTABLE_CACHE_PATH:-"/mnt/data/yongxiy/cachedir"}
+IPUOF_CONFIG_PATH=${IPUCONDA_IPUOF_CONFIG_PATH:-"/localdata/yongxiy/.ipuof.conf.d/ipuof.conf"}
+POP_DIR_BASE=${IPUCONDA_POP_DIR_BASE:-"/mnt/data/yongxiy"}
+TMPDIR=${TMPDIR:-"/mnt/data/yongxiy/tmp"}
 
-TMPDIR="/mnt/scratch001/custeng-cn-scratch/yongxiy/tmp"
+# ------------------------ done --------------------------------------#
 
-# IPUOF_CONFIG_PATH="${POP_BASE_DIR}/sdk/pod16_ipuof.conf"
-IPUOF_CONFIG_PATH="/localdata/yongxiy/.ipuof.conf.d/ipuof.conf"
 
 function warning_msg(){
   printf "\e[93m%s\e[0m" $1
@@ -475,6 +474,11 @@ function conda_wrapper_help_msg(){
   echo "the path is \`\$CONDA_PREFIX/etc/conda/activate.d/ipu_set_env.sh\` or"
   echo "\`\$CONDA_PREFIX/etc/conda/deactivate.d/ipu_unset_env.sh\`"
   echo ""
+  echo "you can declare the environment variables for these default path:"
+  echo "    \`\$IPUCONDA_EXECUTABLE_CACHE_PATH\` is the default value of \`\$EXECUTABLE_CACHE_PATH\`"
+  echo "    \`\$IPUCONDA_IPUOF_CONFIG_PATH\` is the default value of \`\$IPUOF_CONFIG_PATH\`"
+  echo "    \`\$IPUCONDA_POP_DIR_BASE\` is the default value of \`\$POP_DIR_BASE\`"
+  echo ""
   echo "usage:"
   echo "    IPUconda [conda create enviornment command]"
   echo "    for example:"
@@ -522,8 +526,6 @@ fi
 _CONDA_CMD=$@
 echo "${_CONDA_CMD}"
 extract_ipu_conda_options ${_CONDA_CMD}
-
-POP_DIR_BASE="/mnt/scratch001/custeng-cn-scratch/yongxiy"
 
 echo "please input sdk base directory:"
 echo -ne "[default $POP_DIR_BASE (abslute path)] >> "
@@ -586,10 +588,13 @@ _input_config_env
 # echo $POPART_BASE
 # echo $POPLAR_BASE
 
+# echo "${_CONDA_CMD}"
 bash -ic "${_CONDA_CMD}"
 
-_CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $(which conda)))/envs"
+# _CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $(which conda)))/envs"
+_CONDA_ENV_DEFAULT_PREFIX="$(dirname $(dirname $CONDA_EXE))/envs"
 if [[ ${_CONDA_ENV_NAME} != /* ]]; then
+    # not tested
     mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/"
     mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/deactivate.d/"
     _create_conda_activate_script "${_CONDA_ENV_DEFAULT_PREFIX}/${_CONDA_ENV_NAME}/etc/conda/activate.d/ipu_set_env.sh" "${_ML_FRAMEWORK}"
