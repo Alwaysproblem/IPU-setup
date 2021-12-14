@@ -63,14 +63,14 @@ function _create_conda_activate_script(){
 
   if [[ ${_ML_FRAMEWORK} == TF* ]]; then
     # echo 'export TF_CPP_VMODULE="poplar_compiler=1,poplar_executable=1"'
-    if [[ ! -z ${_EXECUTABLE_CACHE_PATH} ]]; then
-      echo "export TF_POPLAR_FLAGS='--max_compilation_threads=$MAX_COMPILATION_THREADS --executable_cache_path=${EXECUTABLE_CACHE_PATH} --show_progress_bar=true'" >> ${file_path}
+    if [[ ! -z ${_EXECUTABLE_CACHE_PATH} ]] && [[ ${_EXECUTABLE_CACHE_PATH} != NotSet ]]; then
+      echo "export TF_POPLAR_FLAGS='--max_compilation_threads=$MAX_COMPILATION_THREADS --executable_cache_path=${_EXECUTABLE_CACHE_PATH} --show_progress_bar=true'" >> ${file_path}
     else
       echo "export TF_POPLAR_FLAGS='--max_compilation_threads=$MAX_COMPILATION_THREADS --show_progress_bar=true'" >> ${file_path}
     fi
   fi
 
-  if [[ ${_ML_FRAMEWORK} == Torch ]] && [[ ! -z ${_EXECUTABLE_CACHE_PATH} ]]; then
+  if [[ ${_ML_FRAMEWORK} == Torch ]] && [[ ! -z ${_EXECUTABLE_CACHE_PATH} ]] && [[ ${_EXECUTABLE_CACHE_PATH} != NotSet ]]; then
     echo "export POPTORCH_CACHE_DIR=${EXECUTABLE_CACHE_PATH}" >> ${file_path}
   fi
 
