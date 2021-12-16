@@ -12,25 +12,25 @@ some enviornment variables description:
 
 For default directory:
 
-POP_DIR_BASE
-    |
-    |
-    --- sdk (hard code)
-         |
-         |
-         --- POPSDK_BASE (for example sdk 2.3.1)
-         |      |
-         |      |
-         |      --- POPLAR_BASE
-         |      |
-         |      --- POPART_BASE
-         |
-         --- POPSDK_BASE (for example sdk 2.4)
-                |
-                |
-                --- POPLAR_BASE
-                |
-                --- POPART_BASE
+    POP_DIR_BASE
+        |
+        |
+        --- sdk (hard code)
+             |
+             |
+             --- POPSDK_BASE (for example sdk 2.3.1)
+             |      |
+             |      |
+             |      --- POPLAR_BASE
+             |      |
+             |      --- POPART_BASE
+             |
+             --- POPSDK_BASE (for example sdk 2.4)
+                    |
+                    |
+                    --- POPLAR_BASE
+                    |
+                    --- POPART_BASE
 
 if you assgined POP_DIR_BASE, you can choose from the multiple versions of sdk.
 if you assgined POPSDK_BASE, you can only use the popsdk you specified
