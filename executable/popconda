@@ -442,7 +442,7 @@ function _input() {
   read _INPUTS
 }
 
-function popconda_setdefualt(){
+function popconda_setdefault(){
 
   local _L_EXECUTABLE_CACHE_PATH="NotSet"
   local _L_IPUOF_CONFIG_PATH="NotSet"
@@ -475,6 +475,7 @@ function popconda_setdefualt(){
   _input "please enter max thread number for compilation (absolute path) [MAX_COMPILATION_THREADS]:" ${_L_MAX_COMPILATION_THREADS}
   _L_MAX_COMPILATION_THREADS=${_INPUTS:-${_L_MAX_COMPILATION_THREADS}}
   _L_MAX_COMPILATION_THREADS="$(($_L_MAX_COMPILATION_THREADS + 1 - 1))" # check _L_MAX_COMPILATION_THREADS is int number
+  mkdir -p $(dirname ${_DOT_ENV_POPCONDA})
 
 cat <<EOF > ${_DOT_ENV_POPCONDA}
 EXECUTABLE_CACHE_PATH="$_L_EXECUTABLE_CACHE_PATH"
@@ -517,7 +518,7 @@ function parse_args_from_console() {
                                                       exit 0
                                                       ;;
             setdefault)                               shift
-                                                      popconda_setdefualt
+                                                      popconda_setdefault
                                                       exit 0
                                                       ;;
             -h | --help)                              print_popconda_helper_msg
