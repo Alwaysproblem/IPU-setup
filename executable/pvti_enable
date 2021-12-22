@@ -1,0 +1,38 @@
+#!/bin/bash
+
+function help_msg(){
+    echo ""
+    echo "popvision activation wrapper before running code"
+    echo ""
+    echo "This can enable popvision logging even if the OOM problem occurs."
+    echo "Before running this command line, you need to declare the variable \`\$POPV_LOG_PATH\`"
+    echo ""
+    echo "usage:"
+    echo "    popvision_enable_oom [run code]"
+    echo "    for example:"
+    echo "        $ POPV_LOG_PATH=/path/to/logging popvision_enable_oom python your_code.py"
+    echo ""
+    echo "    -h, --help: print this helpful message"
+}
+
+
+if [[ -z "${POPV_LOG_PATH}" ]]; then
+    echo "POPV_LOG_PATH should not be empty." 1>&2
+    exit 127
+else
+    if [[ -d "${POPV_LOG_PATH}" ]]; then
+        echo "warning: removing ${POPV_LOG_PATH}"
+        rm -rf ${POPV_LOG_PATH}
+        echo "done"
+    fi
+fi
+
+case $1 in
+    -h | --help)  help_msg
+                  exit 0
+                  ;;
+esac
+
+export PVTI_OPTIONS=PVTI_OPTIONS='{"enable":"true", "directory":"'"${PVTI_LOG_PATH}"'"}'
+eval $@
+unset PVTI_OPTIONS
