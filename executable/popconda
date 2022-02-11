@@ -212,7 +212,8 @@ function extract_condaenv_name(){
 }
 
 function extract_conda_base_prefix(){
-  local _CONDA_ENV_DEFAULT="$(conda info -e | grep base | awk -F" " '{print $3}')"
+  # local _CONDA_ENV_DEFAULT="$(conda info -e | grep base | awk -F" " '{print $3}')"
+  local _CONDA_ENV_DEFAULT="$(conda info --base)"
   _CONDA_ENV_DEFAULT_PREFIX="${_CONDA_ENV_DEFAULT}/envs"
 }
 
