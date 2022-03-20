@@ -75,8 +75,8 @@ function _create_conda_activate_script(){
   fi
 
   if [[ ! -z ${_TMPDIR} ]] && [[ ${_TMPDIR} != NotSet ]];then
-    echo "export TMPDIR=$TMPDIR" >> ${file_path}
     echo 'export _OLD_TMPDIR=$TMPDIR' >> ${file_path}
+    echo "export TMPDIR=$TMPDIR" >> ${file_path}
   fi
 
   if [[ ! -z ${_IPUOF_CONFIG_PATH} ]] && [[ ${_IPUOF_CONFIG_PATH} != NotSet ]];then
