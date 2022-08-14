@@ -27,10 +27,12 @@ POP_DIR_BASE="NotSet"
 TMPDIR="NotSet"
 POPSDK_BASE="NotSet"
 MAX_COMPILATION_THREADS=40
+IPUOF_VIPU_API_HOST="NotSet"
+IPUOF_VIPU_API_PARTITION_ID="NotSet"
 # _DOT_ENV_POPCONDA=".ipucondaenv"
 _DOT_ENV_POPCONDA="$HOME/.ipuenv/.ipucondaenv"
 
-load_dot_env_defaults ${_DOT_ENV_POPCONDA}
+# load_dot_env_defaults ${_DOT_ENV_POPCONDA}
 # ------------------------ done --------------------------------------#
 
 POPLAR_BASE="NotSet"
@@ -52,8 +54,10 @@ function _create_conda_activate_script(){
   local file_path=$1
   local _EXECUTABLE_CACHE_PATH=$2
   local _IPUOF_CONFIG_PATH=$3
-  local _TMPDIR=$4
-  local _ML_FRAMEWORK=$5
+  local _IPUOF_VIPU_API_HOST=$4
+  local _IPUOF_VIPU_API_PARTITION_ID=$5
+  local _TMPDIR=$6
+  local _ML_FRAMEWORK=$7
 
   warning_msg_unspported_jax ${_ML_FRAMEWORK}
 
@@ -81,6 +85,10 @@ function _create_conda_activate_script(){
 
   if [[ ! -z ${_IPUOF_CONFIG_PATH} ]] && [[ ${_IPUOF_CONFIG_PATH} != NotSet ]];then
     echo "export IPUOF_CONFIG_PATH=$IPUOF_CONFIG_PATH" >> ${file_path}
+  elif [[ ! -z ${_IPUOF_VIPU_API_HOST} ]] && [[ ${_IPUOF_VIPU_API_HOST} != NotSet ]] && \
+       [[ ! -z ${_IPUOF_VIPU_API_PARTITION_ID} ]] && [[ ${_IPUOF_VIPU_API_PARTITION_ID} != NotSet ]];then
+    echo "export IPUOF_VIPU_API_HOST=$IPUOF_VIPU_API_HOST" >> ${file_path}
+    echo "export IPUOF_VIPU_API_PARTITION_ID=$IPUOF_VIPU_API_PARTITION_ID" >> ${file_path}
   fi
 
   echo 'export _OLD_CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH' >> ${file_path}
@@ -129,8 +137,10 @@ function _create_conda_deactivate_script(){
   local file_path=$1
   local _EXECUTABLE_CACHE_PATH=$2
   local _IPUOF_CONFIG_PATH=$3
-  local _TMPDIR=$4
-  local _ML_FRAMEWORK=$5
+  local _IPUOF_VIPU_API_HOST=$4
+  local _IPUOF_VIPU_API_PARTITION_ID=$5
+  local _TMPDIR=$6
+  local _ML_FRAMEWORK=$7
 
   warning_msg_unspported_jax ${_ML_FRAMEWORK}
 
@@ -143,7 +153,11 @@ function _create_conda_deactivate_script(){
   fi
 
   if [[ ! -z ${_IPUOF_CONFIG_PATH} ]] && [[ ${_IPUOF_CONFIG_PATH} != NotSet ]];then
-    echo 'unset IPUOF_CONFIG_PATH' >> ${file_path}
+    echo "unset IPUOF_CONFIG_PATH" >> ${file_path}
+  elif [[ ! -z ${_IPUOF_VIPU_API_HOST} ]] && [[ ${_IPUOF_VIPU_API_HOST} != NotSet ]] && \
+       [[ ! -z ${_IPUOF_VIPU_API_PARTITION_ID} ]] && [[ ${_IPUOF_VIPU_API_PARTITION_ID} != NotSet ]];then
+    echo "unset IPUOF_VIPU_API_HOST" >> ${file_path}
+    echo "unset IPUOF_VIPU_API_PARTITION_ID" >> ${file_path}
   fi
 
   echo 'export CMAKE_PREFIX_PATH=$_OLD_CMAKE_PREFIX_PATH' >> ${file_path}
@@ -231,15 +245,15 @@ function initial_conda_new_environment(){
       mkdir -p "${_CONDA_ENV_DEFAULT_PREFIX_}/${_CONDA_ENV_NAME_}/etc/conda/deactivate.d/"
       local env_bash_act="${_CONDA_ENV_DEFAULT_PREFIX_}/${_CONDA_ENV_NAME_}/etc/conda/activate.d/ipu_set_env.sh"
       local env_bash_deact="${_CONDA_ENV_DEFAULT_PREFIX_}/${_CONDA_ENV_NAME_}/etc/conda/deactivate.d/ipu_unset_env.sh"
-      _create_conda_activate_script "${env_bash_act}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${_TMPDIR} ${_ML_FRAMEWORK}
-      _create_conda_deactivate_script "${env_bash_deact}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${_TMPDIR} ${_ML_FRAMEWORK}
+      _create_conda_activate_script "${env_bash_act}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${IPUOF_VIPU_API_HOST} ${IPUOF_VIPU_API_PARTITION_ID} ${_TMPDIR} ${_ML_FRAMEWORK}
+      _create_conda_deactivate_script "${env_bash_deact}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${IPUOF_VIPU_API_HOST} ${IPUOF_VIPU_API_PARTITION_ID} ${_TMPDIR} ${_ML_FRAMEWORK}
   else
       mkdir -p "${_CONDA_ENV_NAME_}/etc/conda/activate.d/"
       mkdir -p "${_CONDA_ENV_NAME_}/etc/conda/deactivate.d/"
       local _env_bash_act="${_CONDA_ENV_NAME_}/etc/conda/activate.d/ipu_set_env.sh"
       local _env_bash_deact="${_CONDA_ENV_NAME_}/etc/conda/deactivate.d/ipu_unset_env.sh"
-      _create_conda_activate_script "${_env_bash_act}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${_TMPDIR} ${_ML_FRAMEWORK}
-      _create_conda_deactivate_script "${_env_bash_deact}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${_TMPDIR} ${_ML_FRAMEWORK}
+      _create_conda_activate_script "${_env_bash_act}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${IPUOF_VIPU_API_HOST} ${IPUOF_VIPU_API_PARTITION_ID} ${_TMPDIR} ${_ML_FRAMEWORK}
+      _create_conda_deactivate_script "${_env_bash_deact}" ${_EXECUTABLE_CACHE_PATH} ${_IPUOF_CONFIG_PATH} ${IPUOF_VIPU_API_HOST} ${IPUOF_VIPU_API_PARTITION_ID} ${_TMPDIR} ${_ML_FRAMEWORK}
   fi
 }
 
@@ -273,7 +287,7 @@ function compelete_popdir_with_popsdk_dir(){
   POPLAR_BASE=$(find $pop_sdk -maxdepth 1 -name "poplar-*")
 }
 
-function compelete_pop_path(){
+function complete_pop_path(){
   if [[ ! -z ${POPLAR_BASE} ]] && [[ ${POPLAR_BASE} != NotSet ]];then
     echo -e ""
     if [[ ! -z ${POPART_BASE} ]] && [[ ${POPART_BASE} == NotSet ]];then
@@ -448,6 +462,8 @@ function popconda_setdefault(){
   local _L_EXECUTABLE_CACHE_PATH="NotSet"
   local _L_IPUOF_CONFIG_PATH="NotSet"
   local _L_POP_DIR_BASE="NotSet"
+  local _L_IPUOF_VIPU_API_HOST="NotSet"
+  local _L_IPUOF_VIPU_API_PARTITION_ID="NotSet"
   local _L_TMPDIR="NotSet"
   local _L_MAX_COMPILATION_THREADS=40
 
@@ -460,6 +476,12 @@ function popconda_setdefault(){
   _input "please enter IPU configuration file (absolute path) [IPUOF_CONFIG_PATH]:" ${_L_IPUOF_CONFIG_PATH}
   _L_IPUOF_CONFIG_PATH=${_INPUTS:-${_L_IPUOF_CONFIG_PATH}}
   check_file_exist ${_L_IPUOF_CONFIG_PATH}
+
+  _input "please enter IPU configuration file (absolute path) [IPUOF_VIPU_API_HOST]:" ${_L_IPUOF_VIPU_API_HOST}
+  _L_IPUOF_VIPU_API_HOST=${_INPUTS:-${_L_IPUOF_VIPU_API_HOST}}
+
+  _input "please enter IPU configuration file (absolute path) [IPUOF_VIPU_API_PARTITION_ID]:" ${_L_IPUOF_VIPU_API_PARTITION_ID}
+  _L_IPUOF_VIPU_API_PARTITION_ID=${_INPUTS:-${_L_IPUOF_VIPU_API_PARTITION_ID}}
 
   _input "please input sdk base directory (absolute path) [POP_DIR_BASE]:" ${_L_POP_DIR_BASE}
   _L_POP_DIR_BASE=${_INPUTS:-${_L_POP_DIR_BASE}}
@@ -479,11 +501,13 @@ function popconda_setdefault(){
   mkdir -p $(dirname ${_DOT_ENV_POPCONDA})
 
 cat <<EOF > ${_DOT_ENV_POPCONDA}
-EXECUTABLE_CACHE_PATH="$_L_EXECUTABLE_CACHE_PATH"
-IPUOF_CONFIG_PATH="$_L_IPUOF_CONFIG_PATH"
-POP_DIR_BASE="$_L_POP_DIR_BASE"
-TMPDIR="$_L_TMPDIR"
-MAX_COMPILATION_THREADS=$_L_MAX_COMPILATION_THREADS
+EXECUTABLE_CACHE_PATH="${_L_EXECUTABLE_CACHE_PATH}"
+IPUOF_CONFIG_PATH="${_L_IPUOF_CONFIG_PATH}"
+IPUOF_VIPU_API_HOST="${_L_IPUOF_VIPU_API_HOST}"
+IPUOF_VIPU_API_PARTITION_ID="${_L_IPUOF_VIPU_API_PARTITION_ID}"
+POP_DIR_BASE="${_L_POP_DIR_BASE}"
+TMPDIR="${_L_TMPDIR}"
+MAX_COMPILATION_THREADS=${_L_MAX_COMPILATION_THREADS}
 
 EOF
 }
@@ -523,10 +547,10 @@ function parse_args_from_console() {
                                                       exit 0
                                                       ;;
             -h | --help)                              print_popconda_helper_msg
-                                                      exit 1
+                                                      exit 0
                                                       ;;
             *)                                        print_popconda_helper_msg
-                                                      exit 1
+                                                      exit 0
                                                       ;;
         esac
         shift
@@ -540,13 +564,14 @@ function parse_args_from_console() {
 }
 
 
-
 parse_args_from_console $@
+load_dot_env_defaults ${_DOT_ENV_POPCONDA}
 extract_condaenv_name $_CONDA_CMD
-compelete_pop_path
+complete_pop_path
 complete_ml_framework
 
-bash -ic "${_CONDA_CMD}"
+# bash -ic "${_CONDA_CMD}"
+eval "${_CONDA_CMD}"
 
 extract_conda_base_prefix
 initial_conda_new_environment ${_CONDA_ENV_DEFAULT_PREFIX} ${_CONDA_ENV_NAME} ${EXECUTABLE_CACHE_PATH} ${IPUOF_CONFIG_PATH} ${TMPDIR} ${ML_FRAMEWORK}
