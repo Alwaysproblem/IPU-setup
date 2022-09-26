@@ -469,7 +469,7 @@ function popconda_setdefault(){
 
   _input "please enter executable graph cache path (absolute path) [EXECUTABLE_CACHE_PATH]:" ${_L_EXECUTABLE_CACHE_PATH}
   _L_EXECUTABLE_CACHE_PATH=${_INPUTS:-${_L_EXECUTABLE_CACHE_PATH}}
-  if [ ! -d ${_L_EXECUTABLE_CACHE_PATH} ];then
+  if [ ! -d ${_L_EXECUTABLE_CACHE_PATH} ] && [[ ${_L_EXECUTABLE_CACHE_PATH} != NotSet ]];then
     mkdir -p ${_L_EXECUTABLE_CACHE_PATH}
   fi
 
@@ -485,13 +485,13 @@ function popconda_setdefault(){
 
   _input "please input sdk base directory (absolute path) [POP_DIR_BASE]:" ${_L_POP_DIR_BASE}
   _L_POP_DIR_BASE=${_INPUTS:-${_L_POP_DIR_BASE}}
-  if [ ! -d ${_L_POP_DIR_BASE} ];then
+  if [ ! -d ${_L_POP_DIR_BASE} ] && [[ ${_L_POP_DIR_BASE} != NotSet ]];;then
     mkdir -p ${_L_POP_DIR_BASE}
   fi
 
   _input "please enter tempary variables stored path (absolute path) [TMPDIR]:" ${_L_TMPDIR}
   _L_TMPDIR=${_INPUTS:-${_L_TMPDIR}}
-  if [ ! -d ${_L_TMPDIR} ];then
+  if [ ! -d ${_L_TMPDIR} ] && [[ ${_L_TMPDIR} != NotSet ]];;then
     mkdir -p ${_L_TMPDIR}
   fi
 
