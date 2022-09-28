@@ -43,6 +43,8 @@ _CONDA_CMD="NotSet"
 _CONDA_ENV_NAME="NotSet"
 _CONDA_ENV_DEFAULT_PREFIX="NotSet"
 
+_MICROMAMBA_FLAG="False"
+
 function warning_msg_unspported_jax(){
   local _ML_FRAMEWORK=$1
   if [[ ${_ML_FRAMEWORK} == "Jax" ]]; then
@@ -197,9 +199,14 @@ function extract_condaenv_name(){
     local _prefix=""
     local _env_name=""
 
-    if [[ $conda_str != "conda" ]] && [[ $conda_str != "miniconda" ]] && [[ $conda_str != "manba" ]] && [[ $conda_str != "micromanba" ]]; then
+    if [[ $conda_str != "conda" ]] && [[ $conda_str != "miniconda" ]] && [[ $conda_str != "mamba" ]] && [[ $conda_str != "micromamba" ]]; then
+        warning_msg "please use one of these: conda, mamba, micromamba"
         print_popconda_helper_msg
         exit 0
+    fi
+
+    if [[ $conda_str == "mamba" ]] || [[ $conda_str == "micromamba" ]]; then
+        _MICROMAMBA_FLAG="True"
     fi
 
     while [ "$1" != "" ]; do
@@ -227,8 +234,16 @@ function extract_condaenv_name(){
 
 function extract_conda_base_prefix(){
   # local _CONDA_ENV_DEFAULT="$(conda info -e | grep base | awk -F" " '{print $3}')"
-  local _CONDA_ENV_DEFAULT="$(conda info --base)"
-  _CONDA_ENV_DEFAULT_PREFIX="${_CONDA_ENV_DEFAULT}/envs"
+  if [[ $_MICROMAMBA_FLAG == "True" ]]; then
+      if [[ -z $MAMBA_ROOT_PREFIX ]]; then
+          warning_msg "MAMBA_ROOT_PREFIX can not be found. It is likely to write the activate shell script to a wrong path."
+      fi
+      _CONDA_ENV_DEFAULT_PREFIX="$MAMBA_ROOT_PREFIX/envs/"
+  else
+      local _CONDA_ENV_DEFAULT="$(conda info --base)"
+      _CONDA_ENV_DEFAULT_PREFIX="${_CONDA_ENV_DEFAULT}/envs"
+  fi
+
 }
 
 function initial_conda_new_environment(){
@@ -469,7 +484,7 @@ function popconda_setdefault(){
 
   _input "please enter executable graph cache path (absolute path) [EXECUTABLE_CACHE_PATH]:" ${_L_EXECUTABLE_CACHE_PATH}
   _L_EXECUTABLE_CACHE_PATH=${_INPUTS:-${_L_EXECUTABLE_CACHE_PATH}}
-  if [ ! -d ${_L_EXECUTABLE_CACHE_PATH} ];then
+  if [ ! -d ${_L_EXECUTABLE_CACHE_PATH} ] && [[ ${_L_EXECUTABLE_CACHE_PATH} != NotSet ]];then
     mkdir -p ${_L_EXECUTABLE_CACHE_PATH}
   fi
 
@@ -477,21 +492,21 @@ function popconda_setdefault(){
   _L_IPUOF_CONFIG_PATH=${_INPUTS:-${_L_IPUOF_CONFIG_PATH}}
   check_file_exist ${_L_IPUOF_CONFIG_PATH}
 
-  _input "please enter IPU configuration file (absolute path) [IPUOF_VIPU_API_HOST]:" ${_L_IPUOF_VIPU_API_HOST}
+  _input "please enter IPU VIPU host address (absolute path) [IPUOF_VIPU_API_HOST]:" ${_L_IPUOF_VIPU_API_HOST}
   _L_IPUOF_VIPU_API_HOST=${_INPUTS:-${_L_IPUOF_VIPU_API_HOST}}
 
-  _input "please enter IPU configuration file (absolute path) [IPUOF_VIPU_API_PARTITION_ID]:" ${_L_IPUOF_VIPU_API_PARTITION_ID}
+  _input "please enter IPU partition id (absolute path) [IPUOF_VIPU_API_PARTITION_ID]:" ${_L_IPUOF_VIPU_API_PARTITION_ID}
   _L_IPUOF_VIPU_API_PARTITION_ID=${_INPUTS:-${_L_IPUOF_VIPU_API_PARTITION_ID}}
 
   _input "please input sdk base directory (absolute path) [POP_DIR_BASE]:" ${_L_POP_DIR_BASE}
   _L_POP_DIR_BASE=${_INPUTS:-${_L_POP_DIR_BASE}}
-  if [ ! -d ${_L_POP_DIR_BASE} ];then
+  if [ ! -d ${_L_POP_DIR_BASE} ] && [[ ${_L_POP_DIR_BASE} != NotSet ]];then
     mkdir -p ${_L_POP_DIR_BASE}
   fi
 
   _input "please enter tempary variables stored path (absolute path) [TMPDIR]:" ${_L_TMPDIR}
   _L_TMPDIR=${_INPUTS:-${_L_TMPDIR}}
-  if [ ! -d ${_L_TMPDIR} ];then
+  if [ ! -d ${_L_TMPDIR} ] && [[ ${_L_TMPDIR} != NotSet ]];then
     mkdir -p ${_L_TMPDIR}
   fi
 
@@ -571,7 +586,7 @@ complete_pop_path
 complete_ml_framework
 
 # bash -ic "${_CONDA_CMD}"
-eval "${_CONDA_CMD}"
+eval "${_CONDA_CMD}" || exit 1
 
 extract_conda_base_prefix
 initial_conda_new_environment ${_CONDA_ENV_DEFAULT_PREFIX} ${_CONDA_ENV_NAME} ${EXECUTABLE_CACHE_PATH} ${IPUOF_CONFIG_PATH} ${TMPDIR} ${ML_FRAMEWORK}
